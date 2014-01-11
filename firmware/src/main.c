@@ -17,8 +17,9 @@ __IO int16_t encoder_val = 0;
 int g_render_lcd = 0;
 
 struct whb04_out_data output_report = { 0 };
+struct whb0x_in_data in_report = { .id = 0x04 };
+uint8_t rotary_switch_read( void );
 
-void whb03_out( struct whb03_out_data *out );
 void whb04_out( struct whb04_out_data *out );
 
 
@@ -30,19 +31,19 @@ void EP1_IN_Callback(void)
 
 void xhc_send( void )
 {
-  struct whb0x_in_data xhc_report;
   
-  memset( &xhc_report, 0x00, sizeof ( struct whb0x_in_data ) );
-  xhc_report.id = 0x04;
-  xhc_report.xor_day = day ^ xhc_report.btn_1;
-  xhc_report.wheel = encoder_val;
-  xhc_report.wheel_mode = 0x11; /* X stage */
+  
+  memset( &in_report, 0x00, sizeof ( struct whb0x_in_data ) );
+  in_report.id = 0x04;
+  in_report.xor_day = day ^ in_report.btn_1;
+  in_report.wheel = encoder_val;
+  in_report.wheel_mode = rotary_switch_read();
     
   /* Reset the control token to inform upper layer that a transfer is ongoing */
   PrevXferComplete = 0;
   
   /* copy buffer in ENDP1 Tx Packet Memory Area*/
-  USB_SIL_Write( EP1_IN, (void*)&xhc_report, sizeof ( struct whb0x_in_data )  );
+  USB_SIL_Write( EP1_IN, (void*)&in_report, sizeof ( struct whb0x_in_data )  );
   
   /* enable endpoint for transmission */
   SetEPTxValid(ENDP1);
@@ -225,7 +226,50 @@ void Encoder_Config( void )
 }
 
 
+/* 
+  0x00 - position switch to off state
+  0x11 - position switch to X state
+  0x12 - position switch to Y state
+  0x13 - position switch to Z state
+  0x15 - position switch to Spindle speed state
+  0x14 - position switch to Feedrate speed state
+  0x18 - position switch to Processing speed state ( A-axis for HB04 ) 
+*/
+void rotary_switch_init( void )
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOB, ENABLE);
+  
+  /* PA8, PA9, PA10, PB10, PB11, PB1 */
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+  GPIO_Init( GPIOA, &GPIO_InitStructure );
+  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_1;  
+  GPIO_Init( GPIOB, &GPIO_InitStructure );
+}
 
+uint8_t rotary_switch_read( void )
+{
+  if( !(GPIOA->IDR & GPIO_Pin_8) )
+    return 0x11;
+  else if( !(GPIOA->IDR & GPIO_Pin_9) )
+    return 0x12;
+  else if( !(GPIOA->IDR & GPIO_Pin_10) )
+    return 0x13;  
+  
+  else if( !(GPIOB->IDR & GPIO_Pin_10) )
+    return 0x15;
+  else if( !(GPIOB->IDR & GPIO_Pin_11) )
+    return 0x14;
+  else if( !(GPIOB->IDR & GPIO_Pin_1) )
+    return 0x18;    
+  
+  return 0;
+}
+
+__IO uint8_t rotary_position  = 0;
 int main(void)
 {
   Set_System();
@@ -246,13 +290,15 @@ int main(void)
   nokia_lcd_init();
   lcd_clear();
   
-
+  rotary_switch_init();
   lcd_write_string( 0, 0, (HwType == DEV_WHB03) ? "XHC HB03":"XHC HB04" );
 
   
   SwTim1 = 2000;
   while (1)
   {
+    rotary_position = rotary_switch_read();
+    
     if (bDeviceState != CONFIGURED )
       continue;
     
@@ -263,10 +309,15 @@ int main(void)
     }
     if( !SwTim1 )
     {   
+        /* update encoder value */
         encoder_val = TIM2->CNT;
         TIM2->CNT = 0;
+        /* update buttons value */
+        
+        /* update rotate switch */
+        
         SwTim1 = 20;
-        //if( PrevXferComplete )
+        if( (encoder_val))
         {
           xhc_send();
         }
