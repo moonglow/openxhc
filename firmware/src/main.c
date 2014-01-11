@@ -14,6 +14,10 @@ __IO uint8_t HwType = DEV_WHB04;
 __IO uint8_t day = 0;
 __IO int16_t encoder_val = 0;
 
+int g_render_lcd = 0;
+
+struct whb04_out_data output_report = { 0 };
+
 void whb03_out( struct whb03_out_data *out );
 void whb04_out( struct whb04_out_data *out );
 
@@ -73,41 +77,40 @@ void xhc_recv( uint8_t *data )
     return;
 
   magic_found = 0;
+  /* convert data to whb04 format */
   if( HwType == DEV_WHB03 )
   {
-    whb03_out( (struct whb03_out_data*)tmp_buff );
+    struct whb03_out_data* p = (struct whb03_out_data*)tmp_buff;
+    int i;
+    
+    output_report.magic = p->magic;
+    output_report.day = p->day;
+    output_report.feedrate_ovr = p->feedrate_ovr;
+    output_report.sspeed_ovr = p->sspeed_ovr;
+    output_report.feedrate = p->feedrate;
+    output_report.sspeed = p->sspeed;
+    output_report.step_mul = p->step_mul;
+    output_report.state = p->state;
+    
+    for( i = 0; i < 6; i++ )
+    {
+      uint16_t tmp = (p->pos[i].p_frac & 0x80)<<16;
+      p->pos[i].p_frac &=~0x80;
+      tmp |= p->pos[i].p_frac * 100l; 
+      output_report.pos[i].p_int = p->pos[i].p_int;
+      output_report.pos[i].p_frac = tmp;
+    }
   }
   else
   {
-    whb04_out( (struct whb04_out_data*)tmp_buff );
+    output_report = *((struct whb04_out_data*)tmp_buff);
   }
-
+  
+  g_render_lcd = 1;
 }
 
 static const char axis_name[] = "XYZXYZ";
 static const char pref_name[] = "WWWMMM";
-
-void whb03_out( struct whb03_out_data *out )
-{
-  char tmp[16];
-  char *s = &tmp[5];
-  char i;
-  
-  tmp[2] = ':';
-  tmp[3] = ' ';
-   
-  day = out->day;
-  for( i = 0; i < 6; i++ )
-  {
-    tmp[0] = pref_name[i];
-    tmp[1] = axis_name[i];
-    tmp[11]=tmp[12]=tmp[13]=tmp[14]='0';
-    sprintf( s, "%.5d.%.2d", out->pos[i].p_int, out->pos[i].p_frac&(~0x80u) );
-    tmp[4] = (out->pos[i].p_frac&0x80u)?'-':'+';
-    lcd_write_string( 0, i, tmp );
-  }
-  
-}
 
 void whb04_out( struct whb04_out_data *out )
 {
@@ -243,14 +246,9 @@ int main(void)
   nokia_lcd_init();
   lcd_clear();
   
-  if( HwType == DEV_WHB03 )
-  {
-    lcd_write_string( 0, 0, "XHC HB03" );
-  }
-  else
-  {
-    lcd_write_string( 0, 0, "XHC HB04" );
-  }
+
+  lcd_write_string( 0, 0, (HwType == DEV_WHB03) ? "XHC HB03":"XHC HB04" );
+
   
   SwTim1 = 2000;
   while (1)
@@ -258,13 +256,17 @@ int main(void)
     if (bDeviceState != CONFIGURED )
       continue;
     
-    
+    if( g_render_lcd )
+    {
+      --g_render_lcd;
+      whb04_out( &output_report );
+    }
     if( !SwTim1 )
     {   
         encoder_val = TIM2->CNT;
         TIM2->CNT = 0;
-        SwTim1 = 100;
-        if( PrevXferComplete )
+        SwTim1 = 20;
+        //if( PrevXferComplete )
         {
           xhc_send();
         }
