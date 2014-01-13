@@ -23,7 +23,7 @@
 #define ROW4 B, 15, SPEED_10MHz
 
 /* 
-  4x5 
+  4x5, but my HW is cheap 4x4 kbd 
   you can found key codes in xhc_mpg_hid_format.pdf
 */
 static const uint8_t kbd_key_codes[] = 
