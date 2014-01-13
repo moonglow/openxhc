@@ -117,6 +117,8 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
 {
     uint8_t col, row;
     
+    if( c1 == 0 )
+      return 0;
     *c1 = 0;
     *c2 = 0;
     
@@ -136,10 +138,14 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
         {
           *c1 = key;
         }
-        else
+        else if( c2 )
         {
           *c2 = key;
           return 2;
+        }
+        else
+        {
+          return 1;
         }
       }
       /* go HiZ */

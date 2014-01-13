@@ -1,13 +1,15 @@
 
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "hw_config.h"
 #include "usb_lib.h"
 #include "usb_pwr.h"
 
 #include "xhc_dev.h"
 #include "nokia_lcd.h"
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include "kbd_driver.h"
 
 __IO uint8_t PrevXferComplete = 1;
 __IO uint8_t HwType = DEV_WHB04;
@@ -19,7 +21,6 @@ int g_render_lcd = 0;
 struct whb04_out_data output_report = { 0 };
 struct whb0x_in_data in_report = { .id = 0x04 };
 uint8_t rotary_switch_read( void );
-uint8_t matrix_kbd_read( uint8_t skip );
 
 void whb04_out( struct whb04_out_data *out );
 
@@ -37,9 +38,8 @@ void xhc_send( void )
   memset( &in_report, 0x00, sizeof ( struct whb0x_in_data ) );
   in_report.id = 0x04;
   
-  in_report.btn_1 = matrix_kbd_read( 0 );
-  if( in_report.btn_1 )
-      in_report.btn_2 = matrix_kbd_read( in_report.btn_1 );
+  kbd_driver.read( &in_report.btn_1, &in_report.btn_2 );
+  
   in_report.xor_day = day ^ in_report.btn_1;
   in_report.wheel = encoder_val;
   in_report.wheel_mode = rotary_switch_read();
@@ -230,68 +230,6 @@ void Encoder_Config( void )
   TIM_Cmd( TIM2, ENABLE);
 }
 
-
-/* 5x4 */
-uint8_t matrix_keys[] = 
-{ 
-  /* reset, stop, m1, m2 */
-  0x17, 0x016, 0x0A, 0x0B,
-  /*X, SP, REWIND, Probe-Z */
-  0x01, 0x02, 0x03, 0x04, 
-  /* Sp, =1/2, =0, Safe-Z */
-  0x0C, 0x06, 0x07, 0x08, 
-  /* Home, Step+, MPG mode, M3 */ 
-  0x09, 0x0E, 0x0D, 0x05,
-  0x00, 0x00, 0x00, 0x00,
-};
-void matrix_kbd_init( void )
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOB, ENABLE);  
-  
-  /* cols */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  GPIO_Init( GPIOB, &GPIO_InitStructure );
-  
-  /* rows */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-  GPIO_Init( GPIOB, &GPIO_InitStructure );  
-}
-
-uint8_t matrix_kbd_read( uint8_t skip )
-{
-    int col, row;
-    
-    row = 4;
-    while( row-- )
-    {
-      GPIOB->ODR |=  (GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-      
-      GPIOB->ODR &= ~(GPIO_Pin_12<<row);
-      /* weak pull-up need time to rise */
-      col = 32;
-      while( col-- )
-      {
-        asm("nop");
-      }
-      col = 5;
-      while( col-- )
-      {
-        if( (GPIOB->IDR & (GPIO_Pin_5<<col)) == 0 )
-        {
-          uint8_t tmp = matrix_keys[(row<<2)+col];
-          if( tmp != skip )
-            return tmp;
-        }
-      }
-    }
-    return 0;
-}
-
 /* 
   0x00 - position switch to off state
   0x11 - position switch to X state
@@ -354,7 +292,9 @@ int main(void)
   nokia_hw_init();
   nokia_lcd_init();
   lcd_clear();
-  matrix_kbd_init();
+  /* init matrix keyboard */
+  kbd_driver.init();
+  
   rotary_switch_init();
   lcd_write_string( 0, 0, (HwType == DEV_WHB03) ? "XHC HB03":"XHC HB04" );
 
@@ -382,7 +322,7 @@ int main(void)
         
         /* update rotate switch */
 
-        tmp_key = matrix_kbd_read( 0 );
+        kbd_driver.read( &tmp_key, 0 );
         if( (old_enc_state!=encoder_val) || (tmp_key != old_btn_state ))
         {
           old_btn_state = tmp_key;
