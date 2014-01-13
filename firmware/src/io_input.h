@@ -7,6 +7,7 @@ struct t_io_driver
   int16_t (*encoder_read)( void );
   uint8_t (*rotary_read)( void );
   uint8_t (*hw_is_xhb04)( void );
+  uint8_t (*pos_is_wc)( void );
 };
 
 

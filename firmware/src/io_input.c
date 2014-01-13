@@ -35,6 +35,9 @@
 /* BOOT1 by default */
 #define SELECT_HW       B, 2
 
+/* POSITION STATUS WC or MC */
+#define SELECT_POS      C, 13
+
 /* it is not so flexible, but no need to change i thing */
 static void encoder_init( void )
 {
@@ -101,6 +104,11 @@ static uint8_t select_hw_read( void )
   return PIN_STAT( SELECT_HW );
 }
 
+static uint8_t select_pos_read( void )
+{
+  return PIN_STAT( SELECT_POS );
+}
+
 static void io_input_init(  void )
 {
   uint8_t t = 255;
@@ -124,6 +132,10 @@ static void io_input_init(  void )
   PORT_ENABLE_CLOCK( SELECT_HW );
   PIN_INPUT_PU( SELECT_HW );
   
+  /* position chooser */
+  PORT_ENABLE_CLOCK( SELECT_POS );
+  PIN_INPUT_PD( SELECT_POS );
+  
   /* quadrature encoder */
   encoder_init();
   while( t-- ) 
@@ -143,6 +155,7 @@ static void io_input_exit( void )
   
   PIN_INPUT_FLOATING( SELECT_HW );
   
+  PIN_INPUT_FLOATING( SELECT_POS );
   /* TODO: encoder cleanup code too */
 }
 
@@ -152,4 +165,5 @@ const struct t_io_driver io_driver = {
   .encoder_read = encoder_read,
   .rotary_read = rotary_switch_read,
   .hw_is_xhb04 = select_hw_read,
+  .pos_is_wc = select_pos_read,
 };

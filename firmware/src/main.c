@@ -115,26 +115,42 @@ void xhc_recv( uint8_t *data )
   g_render_lcd = 1;
 }
 
-static const char axis_name[] = "XYZXYZ";
+static char axis_name[] = "XYZ";
 static const char pref_name[] = "WWWMMM";
 
 void whb04_out( struct whb04_out_data *out )
 {
-  char tmp[16];
+  char tmp[18];
   char *s = &tmp[5];
-  char i;
+  char i, n;
+ 
+  /* update XOR key */
+  day = out->day;
+  
+  sprintf( tmp, "P:%.2Xh M:%.2Xh S:%.2Xh", rotary_pos, out->step_mul, out->state );
+  lcd_write_string( 0, 0, tmp );
+  sprintf( tmp, "S:  %.5d  %.5d", out->sspeed, out->sspeed_ovr );
+  lcd_write_string( 0, 1, tmp );
+  sprintf( tmp, "F:  %.5d  %.5d", out->feedrate, out->feedrate_ovr );
+  lcd_write_string( 0, 2, tmp );
+  
+  if( (HwType == DEV_WHB04) && (rotary_pos == 0x18 ) )
+    axis_name[0] = 'A';
+  else
+    axis_name[0] = 'X';
+
   
   tmp[2] = ':';
   tmp[3] = ' ';
-
-  day = out->day;
-  for( i = 0; i < 6; i++ )
+  
+  n = io_driver.pos_is_wc()? 0: 3;
+  for( i = n; i < (3+n); i++ )
   {
     tmp[0] = pref_name[i];
-    tmp[1] = axis_name[i];
+    tmp[1] = axis_name[i%3];
     sprintf( s, "%.5d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
     tmp[4] = (out->pos[i].p_frac&0x8000u)?'-':'+';
-    lcd_write_string( 0, i, tmp );
+    lcd_write_string( 0, i+3-n, tmp );
   }
   
 }
@@ -196,7 +212,7 @@ int main(void)
 
   
   io_poll_tmr = 500;
-  while (1)
+  for (;;)
   {
     static uint8_t nkeys = 0, c1, c2;
     static int16_t encoder = 0;
@@ -242,7 +258,7 @@ int main(void)
         state_changed |=4;
         nkeys = tmp;
       }
-      io_poll_tmr = 25;
+      io_poll_tmr = 50;
     }
 
     if( state_changed )
