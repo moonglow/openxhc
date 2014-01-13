@@ -11,17 +11,17 @@
 #include "nokia_lcd.h"
 #include "kbd_driver.h"
 
+#include "io_macro.h"
+
 __IO uint8_t PrevXferComplete = 1;
 __IO uint8_t HwType = DEV_WHB04;
+/* used as key for XOR */
 __IO uint8_t day = 0;
-__IO int16_t encoder_val = 0;
 
 int g_render_lcd = 0;
 
 struct whb04_out_data output_report = { 0 };
 struct whb0x_in_data in_report = { .id = 0x04 };
-uint8_t rotary_switch_read( void );
-
 void whb04_out( struct whb04_out_data *out );
 
 
@@ -170,113 +170,13 @@ void init_delay_timer( void )
   TIM_Cmd( TIM4, ENABLE);
 }
 
-void CheckEmulatedVersion( void )
-{
-  uint8_t i = 200;
-  
-  GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE);
-  
 
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  GPIO_Init( GPIOB, &GPIO_InitStructure );
-  
-  while( --i )
-  {
-    asm("nop");
-    asm("nop");
-    asm("nop");
-    asm("nop");
-  }
-  
-  HwType = ( GPIOB->IDR & GPIO_Pin_2 )? DEV_WHB04: DEV_WHB03;
-}
-
-void Encoder_Config( void )
-{
-  GPIO_InitTypeDef   GPIO_InitStructure;
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-  TIM_ICInitTypeDef  TIM_ICInitStructure;
-   
-  /* PA0 - A, PA1 - B */
-  RCC_APB1PeriphClockCmd( RCC_APB1Periph_TIM2, ENABLE );
-  
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  GPIO_Init( GPIOA, &GPIO_InitStructure);
-  
-  TIM_TimeBaseStructure.TIM_Prescaler = 0;
-  TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
-  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up | TIM_CounterMode_Down;
-  
-  TIM_TimeBaseInit( TIM2, &TIM_TimeBaseStructure);
-  
-  TIM_EncoderInterfaceConfig( TIM2, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising, TIM_ICPolarity_Rising );
-  
-  TIM_ICStructInit(&TIM_ICInitStructure);
-  TIM_ICInitStructure.TIM_ICFilter = 0x04;
-  
-  TIM_ICInitStructure.TIM_Channel = TIM_Channel_1;
-  TIM_ICInit( TIM2, &TIM_ICInitStructure);
-  
-  TIM_ICInitStructure.TIM_Channel = TIM_Channel_2;
-  TIM_ICInit( TIM2, &TIM_ICInitStructure);
-  
-  TIM2->CNT = 0;
-  
-  TIM_Cmd( TIM2, ENABLE);
-}
-
-/* 
-  0x00 - position switch to off state
-  0x11 - position switch to X state
-  0x12 - position switch to Y state
-  0x13 - position switch to Z state
-  0x15 - position switch to Spindle speed state
-  0x14 - position switch to Feedrate speed state
-  0x18 - position switch to Processing speed state ( A-axis for HB04 ) 
-*/
-void rotary_switch_init( void )
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB, ENABLE);
-  
-  /* PA8, PA9, PA10, PB10, PB11, PB1 */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  GPIO_Init( GPIOA, &GPIO_InitStructure );
-  
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_1;  
-  GPIO_Init( GPIOB, &GPIO_InitStructure );
-}
-
-uint8_t rotary_switch_read( void )
-{
-  if( !(GPIOA->IDR & GPIO_Pin_8) )
-    return 0x11;
-  else if( !(GPIOA->IDR & GPIO_Pin_9) )
-    return 0x12;
-  else if( !(GPIOA->IDR & GPIO_Pin_10) )
-    return 0x13;  
-  
-  else if( !(GPIOB->IDR & GPIO_Pin_10) )
-    return 0x15;
-  else if( !(GPIOB->IDR & GPIO_Pin_11) )
-    return 0x14;
-  else if( !(GPIOB->IDR & GPIO_Pin_1) )
-    return 0x18;    
-  
-  return 0;
-}
-
+//HwType = ( GPIOB->IDR & GPIO_Pin_2 )? DEV_WHB04: DEV_WHB03;
 int main(void)
 {
-  Set_System();
+  int state_changed = 0;
   
+  Set_System();
   /* check XHC verion based on BOOT1 ( PB2 state ) */
   CheckEmulatedVersion();
   Encoder_Config();
@@ -304,7 +204,10 @@ int main(void)
   {
     static uint8_t old_btn_state = 0;
     static int16_t old_enc_state = 0;
-    uint8_t tmp_key;
+    static uint8_t tmp_key = 0;
+    
+    kbd_driver.read( &tmp_key, &old_btn_state );
+    
     if (bDeviceState != CONFIGURED )
       continue;
     

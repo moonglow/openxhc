@@ -1934,6 +1934,9 @@
         <name>$PROJ_DIR$\src\font5x8.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\src\io_input.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\src\kbd_driver.c</name>
       </file>
       <file>
