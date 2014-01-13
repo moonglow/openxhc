@@ -232,32 +232,6 @@ void Encoder_Config( void )
 
 
 /* 5x4 */
-/*
-code    whb03   whb04
-0x17    no      reset
-0x16    yes     stop
-
-0x01    
-0x02
-0x03
-0x04
-
-0x0C
-0x06
-0x07
-0x08
-
-0x09
-0x0A            M1
-0x0B            M2
-0x05            M3
-
-0x0D            Step++
-0x0E            MPG Mode
-0x0F            M6
-0x10            M7
-
-*/
 uint8_t matrix_keys[] = 
 { 
   /* reset, stop, m1, m2 */
