@@ -50,14 +50,15 @@ static uint8_t read_col( uint8_t ncol )
       return PIN_STAT( COL2 );
     case 2u:
       return PIN_STAT( COL3 );
-    case 4u:
+    case 3u:
       return PIN_STAT( COL4 );
-    case 5u:
+    case 4u:
       return PIN_STAT( COL5 );
   }
   return 0;
 }
 
+#if 0
 static uint8_t read_row( uint8_t nrow )
 {
   switch( nrow )
@@ -68,11 +69,12 @@ static uint8_t read_row( uint8_t nrow )
       return PIN_STAT( ROW2 );
     case 2u:
       return PIN_STAT( ROW3 );
-    case 4u:
+    case 3u:
       return PIN_STAT( ROW4 );
   }
   return 0;
 }
+#endif
 
 static void set_row( uint8_t nrow )
 {
@@ -87,7 +89,7 @@ static void set_row( uint8_t nrow )
     case 2u:
       PIN_HI( ROW3 );
       break;
-    case 4u:
+    case 3u:
       PIN_HI( ROW4 );
       break;
   }
@@ -106,7 +108,7 @@ static void reset_row( uint8_t nrow )
     case 2u:
       PIN_LOW( ROW3 );
       break;
-    case 4u:
+    case 3u:
       PIN_LOW( ROW4 );
       break;
   }
@@ -126,6 +128,8 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
     while( row-- )
     {
       reset_row( row );
+      col=32;
+      while( --col ) asm("nop");
       col = 5;
       while( col-- )
       {
@@ -150,8 +154,6 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
       }
       /* go HiZ */
       set_row( row );
-      /* wait for it */
-      while( read_row( row ) == 0 );
     }
     if( *c1 )
       return 1;

@@ -8,7 +8,7 @@
 
 /* compiler will calculate this hell staticaly */
 #define EX_GPIO_PIN_MODE( PORT, PIN, MODE, SPEED ) do{\
-((uint32_t*)GPIO##PORT##_BASE)[PIN>>3u] &= 0x0Fu<<((PIN%8u)<<2u);\
+((uint32_t*)GPIO##PORT##_BASE)[PIN>>3u] &= ~(0x0Fu<<((PIN%8u)<<2u));\
 ((uint32_t*)GPIO##PORT##_BASE)[PIN>>3u] |= (MODE|SPEED)<<((PIN%8u)<<2u);\
 }while(0)
 
