@@ -122,7 +122,8 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
     if( c1 == 0 )
       return 0;
     *c1 = 0;
-    *c2 = 0;
+    if( c2 )
+      *c2 = 0;
     
     row = 4;
     while( row-- )
@@ -136,7 +137,6 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
         uint8_t key;
         if( read_col( col ) )
           continue;
-        
         key = kbd_key_codes[(row<<2)+col];
         if( 0 == *c1 )
         {
@@ -145,14 +145,16 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
         else if( c2 )
         {
           *c2 = key;
+          /* dirtyyyy */
+          set_row( row );
           return 2;
         }
         else
         {
+          set_row( row );
           return 1;
         }
       }
-      /* go HiZ */
       set_row( row );
     }
     if( *c1 )

@@ -10,14 +10,14 @@
 #include "xhc_dev.h"
 #include "nokia_lcd.h"
 #include "kbd_driver.h"
-
-#include "io_macro.h"
+#include "io_input.h"
 
 __IO uint8_t PrevXferComplete = 1;
 __IO uint8_t HwType = DEV_WHB04;
 /* used as key for XOR */
 __IO uint8_t day = 0;
-
+int16_t encoder_val = 0;
+uint8_t rotary_pos = 0;
 int g_render_lcd = 0;
 
 struct whb04_out_data output_report = { 0 };
@@ -42,7 +42,7 @@ void xhc_send( void )
   
   in_report.xor_day = day ^ in_report.btn_1;
   in_report.wheel = encoder_val;
-  in_report.wheel_mode = rotary_switch_read();
+  in_report.wheel_mode = rotary_pos;
     
   /* Reset the control token to inform upper layer that a transfer is ongoing */
   PrevXferComplete = 0;
@@ -139,12 +139,12 @@ void whb04_out( struct whb04_out_data *out )
   
 }
 
-__IO uint32_t SwTim1 = 0;
+__IO uint32_t io_poll_tmr = 0;
 void TIM4_IRQHandler( void )
 {
   TIM4->SR = (uint16_t)(~TIM_IT_Update);
-  if( SwTim1 )
-    --SwTim1;
+  if( io_poll_tmr )
+    --io_poll_tmr;
 }
 
 void init_delay_timer( void )
@@ -170,43 +170,36 @@ void init_delay_timer( void )
   TIM_Cmd( TIM4, ENABLE);
 }
 
-
-//HwType = ( GPIOB->IDR & GPIO_Pin_2 )? DEV_WHB04: DEV_WHB03;
 int main(void)
 {
   int state_changed = 0;
   
   Set_System();
-  /* check XHC verion based on BOOT1 ( PB2 state ) */
-  CheckEmulatedVersion();
-  Encoder_Config();
+  /* init encoder, btns, switch etc */
+  io_driver.init();
+  HwType = io_driver.hw_is_xhb04() ? DEV_WHB04:DEV_WHB03;
   
-  
+  /* init usb stuff */
   USB_Interrupts_Config();
-  
   Set_USBClock();
-  
   USB_Init();
+  
+  /* init matrix keyboard */
+  kbd_driver.init();
   
   init_delay_timer();
   nokia_hw_init();
   nokia_lcd_init();
   lcd_clear();
-  /* init matrix keyboard */
-  kbd_driver.init();
   
-  rotary_switch_init();
   lcd_write_string( 0, 0, (HwType == DEV_WHB03) ? "XHC HB03":"XHC HB04" );
 
   
-  SwTim1 = 2000;
+  io_poll_tmr = 500;
   while (1)
   {
-    static uint8_t old_btn_state = 0;
-    static int16_t old_enc_state = 0;
-    static uint8_t tmp_key = 0;
-    
-    kbd_driver.read( &tmp_key, &old_btn_state );
+    static uint8_t nkeys = 0, c1, c2;
+    static int16_t encoder = 0;
     
     if (bDeviceState != CONFIGURED )
       continue;
@@ -216,23 +209,46 @@ int main(void)
       --g_render_lcd;
       whb04_out( &output_report );
     }
-    if( !SwTim1 )
-    {   
-        /* update encoder value */
-        encoder_val = TIM2->CNT;
-        TIM2->CNT = 0;
-        /* update buttons value */
-        
-        /* update rotate switch */
+    
+    /* update input events state */
+    if( !io_poll_tmr )
+    {
+      uint8_t tmp;
+      encoder_val = io_driver.encoder_read();
+      if( encoder_val || (encoder_val != encoder ) )
+      {
+          if( encoder_val > 0 )
+            encoder_val = 1;
+          else if( encoder_val < 0 )
+            encoder_val = -1;
+          state_changed |= 1;
+          encoder = encoder_val;
+      }
+      tmp = io_driver.rotary_read();
+      if( rotary_pos != tmp )
+      {
+        state_changed |= 2;
+        rotary_pos = tmp;
+      }
+      
+      uint8_t k1, k2;
+      do
+      {
+        k1 = c1, k2 = c2;
+        tmp = kbd_driver.read( &c1, &c2 );
+      }while( (k1!=c1) || (k2 != c2 ) );
+      if( nkeys != tmp )
+      {
+        state_changed |=4;
+        nkeys = tmp;
+      }
+      io_poll_tmr = 25;
+    }
 
-        kbd_driver.read( &tmp_key, 0 );
-        if( (old_enc_state!=encoder_val) || (tmp_key != old_btn_state ))
-        {
-          old_btn_state = tmp_key;
-          old_enc_state = encoder_val;
-          xhc_send();
-        }
-        SwTim1 = 20;
+    if( state_changed )
+    {   
+       xhc_send();
+       state_changed = 0;
     }
   }
 }
