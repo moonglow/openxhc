@@ -129,7 +129,8 @@ void whb04_out( struct whb04_out_data *out )
   /* update XOR key */
   day = out->day;
   
-  sprintf( tmp, "P:%.2Xh %.4d*1x", rotary_pos, mul2val[out->step_mul&0x0F] );
+  lcd_clear_line( 0 );
+  sprintf( tmp, "P:%.2Xh %d*1x", rotary_pos, mul2val[out->step_mul&0x0F] );
   lcd_write_string( 0, 0, tmp );
   sprintf( tmp, "S:  %.5d  %.5d", out->sspeed, out->sspeed_ovr );
   lcd_write_string( 0, 1, tmp );

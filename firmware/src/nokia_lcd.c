@@ -133,6 +133,18 @@ void lcd_write_string( char x, char y,char *s)
   UNSELECT();
 } 
 
+void lcd_clear_line( char y )
+{
+  char n;
+  SELECT();
+  lcd_set_xy( 0, y );
+  n = 84;
+  while( n-- )
+  { 
+    lcd_write_byte(0x00,1);	 						
+  }
+  UNSELECT();
+} 
 
 void lcd_write_pixels( uint8_t data )
 {
