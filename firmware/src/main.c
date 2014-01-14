@@ -230,8 +230,16 @@ int main(void)
     if( !io_poll_tmr )
     {
       uint8_t tmp;
+      
+      tmp = io_driver.rotary_read();
+      if( rotary_pos != tmp )
+      {
+        state_changed |= 2;
+        rotary_pos = tmp;
+      }
+      
       encoder_val = io_driver.encoder_read();
-      if( encoder_val || (encoder_val != encoder ) )
+      if( rotary_pos && (encoder_val || (encoder_val != encoder )) )
       {
           if( encoder_val > 0 )
             encoder_val = 1;
@@ -239,12 +247,6 @@ int main(void)
             encoder_val = -1;
           state_changed |= 1;
           encoder = encoder_val;
-      }
-      tmp = io_driver.rotary_read();
-      if( rotary_pos != tmp )
-      {
-        state_changed |= 2;
-        rotary_pos = tmp;
       }
       
       uint8_t k1, k2;
