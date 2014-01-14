@@ -24,6 +24,8 @@ struct whb04_out_data output_report = { 0 };
 struct whb0x_in_data in_report = { .id = 0x04 };
 void whb04_out( struct whb04_out_data *out );
 
+/* convert step multiplier */
+static uint16_t mul2val[] = { 0, 1, 5, 10, 20, 30, 40, 50, 100, 500, 1000, 0, 0, 0, 0, 0 };
 
 /* EP1 packet goes out OK */
 void EP1_IN_Callback(void)
@@ -127,7 +129,7 @@ void whb04_out( struct whb04_out_data *out )
   /* update XOR key */
   day = out->day;
   
-  sprintf( tmp, "P:%.2Xh M:%.2Xh S:%.2Xh", rotary_pos, out->step_mul, out->state );
+  sprintf( tmp, "P:%.2Xh %.4d*1x", rotary_pos, mul2val[out->step_mul&0x0F] );
   lcd_write_string( 0, 0, tmp );
   sprintf( tmp, "S:  %.5d  %.5d", out->sspeed, out->sspeed_ovr );
   lcd_write_string( 0, 1, tmp );
