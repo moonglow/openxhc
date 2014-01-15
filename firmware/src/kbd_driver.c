@@ -1,5 +1,5 @@
 /*********************************************************************\
- * Copyright (C) 2014 Roman 'Fallout' Ilichev <fxdteam@gmail.com>    *
+* Copyleft (>) 2014 Roman 'Fallout' Ilichev <fxdteam@gmail.com>      *
  *                                                                   *
  * This file is part of OpenXHC project                              *
  *                             WTFPL LICENSE v2                      *

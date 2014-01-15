@@ -1,3 +1,10 @@
+/*********************************************************************\
+* Copyleft (>) 2014 Roman 'Fallout' Ilichev <fxdteam@gmail.com>      *
+ *                                                                   *
+ * This file is part of OpenXHC project                              *
+ *                             WTFPL LICENSE v2                      *
+\*********************************************************************/
+
 #include <stdlib.h>
 #include "stm32f10x.h"
 #include "spi_master.h"
