@@ -1,4 +1,4 @@
-OpenXHC Project ![logo][6]
+OpenXHC Project ![logo][1]
 ---------------
 
 Open source implementation of XHC HB03 HB04 CNC MPG devices.
