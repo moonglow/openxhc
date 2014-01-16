@@ -216,11 +216,11 @@ uint8_t *HID_GetDeviceDescriptor(uint16_t Length)
 {
   /* PID offset */
   uint16_t *dev_id_ptr = (uint16_t *)&Device_Descriptor.Descriptor[10];
-  if( HwType == DEV_WHB04 )
+  if( g_hw_type == DEV_WHB04 )
   {
       *dev_id_ptr = WHB04_PID;
   }
-  else if( HwType == DEV_WHB03 )
+  else if( g_hw_type == DEV_WHB03 )
   {
       *dev_id_ptr = WHB03_PID;
   }

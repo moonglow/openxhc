@@ -137,4 +137,4 @@ struct whb0x_in_data
 };
 #pragma pack( pop )
 
-extern __IO uint8_t HwType;
+extern __IO uint8_t g_hw_type;

@@ -37,25 +37,7 @@ extern const uint8_t font5x8[][5];
 #define LCD_RES_ON()    PIN_LOW( LCD_RESET )
 #define LCD_RES_OFF()   PIN_HI( LCD_RESET )
 
-
-void nokia_hw_init( void )
-{
-  spi_init( 1 );
-  
-  PORT_ENABLE_CLOCK( LCD_RESET );
-  PORT_ENABLE_CLOCK( LCD_CS );
-  PORT_ENABLE_CLOCK( LCD_DC );
-  
-  PIN_LOW( LCD_RESET );
-  PIN_OUT_PP( LCD_RESET );
-  
-  PIN_HI( LCD_CS );
-  PIN_OUT_PP( LCD_CS );
-  
-  PIN_OUT_PP( LCD_DC );
-}
-
-void lcd_write_byte( uint8_t data, char cmd )
+static void lcd_write_byte( uint8_t data, char cmd )
 {
   if( cmd )
   {
@@ -69,7 +51,13 @@ void lcd_write_byte( uint8_t data, char cmd )
   spi1_send_byte( data );
 }
 
-void nokia_lcd_init( void )
+static void lcd_set_xy( char x, char  y )
+{
+  lcd_write_byte(0x40 | y, 0);// column
+  lcd_write_byte(0x80 | x, 0);// row
+} 
+
+static void nokia_lcd_init( void )
 {
   int i;
   
@@ -96,13 +84,26 @@ void nokia_lcd_init( void )
   UNSELECT();  
 }
 
-void lcd_set_xy( char x, char  y )
+static void nokia_hw_init( void )
 {
-  lcd_write_byte(0x40 | y, 0);// column
-  lcd_write_byte(0x80 | x, 0);// row
-} 
+  spi_init( 1 );
+  
+  PORT_ENABLE_CLOCK( LCD_RESET );
+  PORT_ENABLE_CLOCK( LCD_CS );
+  PORT_ENABLE_CLOCK( LCD_DC );
+  
+  PIN_LOW( LCD_RESET );
+  PIN_OUT_PP( LCD_RESET );
+  
+  PIN_HI( LCD_CS );
+  PIN_OUT_PP( LCD_CS );
+  
+  PIN_OUT_PP( LCD_DC );
+  
+  nokia_lcd_init();
+}
 
-void lcd_clear(void)
+static void lcd_clear(void)
 {
   uint16_t n;
 
@@ -116,7 +117,7 @@ void lcd_clear(void)
   UNSELECT();
 }
 
-void lcd_write_char( char c)
+static void lcd_write_char( char c)
 {
   char line, n;
   c-= 32;
@@ -128,7 +129,7 @@ void lcd_write_char( char c)
   lcd_write_byte(font5x8[c][line], 1);
 }
 
-void lcd_write_string( char x, char y,char *s)
+static void lcd_write_string( char *s, int x, int y )
 {
   SELECT();
   lcd_set_xy( x,y );
@@ -140,7 +141,7 @@ void lcd_write_string( char x, char y,char *s)
   UNSELECT();
 } 
 
-void lcd_clear_line( char y )
+static void lcd_clear_line( char y )
 {
   char n;
   SELECT();
@@ -153,14 +154,14 @@ void lcd_clear_line( char y )
   UNSELECT();
 } 
 
-void lcd_write_pixels( uint8_t data )
+static void lcd_write_pixels( uint8_t data )
 {
    SELECT();
    lcd_write_byte( data, 1 );
    UNSELECT();
 }
 
-void lcd_xy( char x,  char y)
+static void lcd_xy( char x,  char y)
 {
   SELECT();
   lcd_write_byte(0x40 | y, 0);// column
@@ -168,3 +169,20 @@ void lcd_xy( char x,  char y)
   UNSELECT();
 } 
 
+
+/* display data to specific display */
+static void nokia_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
+{
+  
+}
+
+
+const struct t_lcd_driver lcd_driver = 
+{
+  .init = nokia_hw_init,
+  .exit = 0,
+  .render_screen = nokia_render_screen,
+  .clear_screen = lcd_clear,
+  .draw_bmp = 0,
+  .draw_text = lcd_write_string,
+};

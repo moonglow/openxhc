@@ -17,9 +17,10 @@
 #include "nokia_lcd.h"
 #include "kbd_driver.h"
 #include "io_input.h"
+#include "timer_drv.h"
 
 __IO uint8_t PrevXferComplete = 1;
-__IO uint8_t HwType = DEV_WHB04;
+__IO uint8_t g_hw_type = DEV_WHB04;
 /* used as key for XOR */
 __IO uint8_t day = 0;
 int16_t encoder_val = 0;
@@ -87,12 +88,12 @@ void xhc_recv( uint8_t *data )
   offset+=CHUNK_SIZE;
   
   /* we recive all data ? */
-  if( offset < HwType )
+  if( offset < g_hw_type )
     return;
 
   magic_found = 0;
   /* convert data to whb04 format */
-  if( HwType == DEV_WHB03 )
+  if( g_hw_type == DEV_WHB03 )
   {
     struct whb03_out_data* p = (struct whb03_out_data*)tmp_buff;
     int i;
@@ -135,15 +136,14 @@ void whb04_out( struct whb04_out_data *out )
   /* update XOR key */
   day = out->day;
   
-  lcd_clear_line( 0 );
-  sprintf( tmp, "P:%.2Xh %d*1x", rotary_pos, mul2val[out->step_mul&0x0F] );
-  lcd_write_string( 0, 0, tmp );
+  sprintf( tmp, "P:%.2Xh %.4d*", rotary_pos, mul2val[out->step_mul&0x0F] );
+  lcd_driver.draw_text( tmp, 0, 0 );
   sprintf( tmp, "S:  %.5d  %.5d", out->sspeed, out->sspeed_ovr );
-  lcd_write_string( 0, 1, tmp );
+  lcd_driver.draw_text( tmp, 0, 1 );
   sprintf( tmp, "F:  %.5d  %.5d", out->feedrate, out->feedrate_ovr );
-  lcd_write_string( 0, 2, tmp );
+  lcd_driver.draw_text( tmp, 0, 2 );
   
-  if( (HwType == DEV_WHB04) && (rotary_pos == 0x18 ) )
+  if( (g_hw_type == DEV_WHB04) && (rotary_pos == 0x18 ) )
     axis_name[0] = 'A';
   else
     axis_name[0] = 'X';
@@ -159,41 +159,12 @@ void whb04_out( struct whb04_out_data *out )
     tmp[1] = axis_name[i%3];
     sprintf( s, "%.5d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
     tmp[4] = (out->pos[i].p_frac&0x8000u)?'-':'+';
-    lcd_write_string( 0, i+3-n, tmp );
+    lcd_driver.draw_text( tmp, 0, i+3-n );
   }
   
 }
 
-__IO uint32_t io_poll_tmr = 0;
-void TIM4_IRQHandler( void )
-{
-  TIM4->SR = (uint16_t)(~TIM_IT_Update);
-  if( io_poll_tmr )
-    --io_poll_tmr;
-}
 
-void init_delay_timer( void )
-{
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-  
-  RCC_APB1PeriphClockCmd( RCC_APB1Periph_TIM4, ENABLE );  
-  
-  /*  72000000/72/1000 = 1000hz */
-  TIM_TimeBaseStructure.TIM_Prescaler = SystemCoreClock/1000000ul;
-  TIM_TimeBaseStructure.TIM_Period = (1000-1);
-  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
- 
-  TIM_TimeBaseInit( TIM4, &TIM_TimeBaseStructure);
-  
-  TIM4->CNT = 0;
-  
-  NVIC_EnableIRQ( TIM4_IRQn );
-  TIM_ClearITPendingBit( TIM4, TIM_IT_Update );
-  TIM_ITConfig( TIM4, TIM_IT_Update, ENABLE);
-  
-  TIM_Cmd( TIM4, ENABLE);
-}
 
 int main(void)
 {
@@ -202,7 +173,9 @@ int main(void)
   Set_System();
   /* init encoder, btns, switch etc */
   io_driver.init();
-  HwType = io_driver.hw_is_xhb04() ? DEV_WHB04:DEV_WHB03;
+  /* used for delays */
+  timer_driver.init();
+  g_hw_type = io_driver.hw_is_xhb04() ? DEV_WHB04:DEV_WHB03;
   
   /* init usb stuff */
   USB_Interrupts_Config();
@@ -212,12 +185,11 @@ int main(void)
   /* init matrix keyboard */
   kbd_driver.init();
   
-  init_delay_timer();
-  nokia_hw_init();
-  nokia_lcd_init();
-  lcd_clear();
+  /* init lcd hardware */
+  lcd_driver.init();
+  lcd_driver.clear_screen();
   
-  lcd_write_string( 0, 0, (HwType == DEV_WHB03) ? "XHC HB03":"XHC HB04" );
+  lcd_driver.draw_text( (g_hw_type == DEV_WHB03) ? "XHC HB03":"XHC HB04", 20, 2 );
 
   
   io_poll_tmr = 500;
@@ -232,6 +204,7 @@ int main(void)
     if( g_render_lcd )
     {
       --g_render_lcd;
+      lcd_driver.render_screen( &output_report, rotary_pos, io_driver.pos_is_wc() );
       whb04_out( &output_report );
     }
     
@@ -243,6 +216,7 @@ int main(void)
       tmp = io_driver.rotary_read();
       if( rotary_pos != tmp )
       {
+        g_render_lcd = 1;
         state_changed |= 2;
         rotary_pos = tmp;
       }

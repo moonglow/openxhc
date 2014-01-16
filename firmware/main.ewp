@@ -1945,6 +1945,9 @@
       <file>
         <name>$PROJ_DIR$\src\spi_master.c</name>
       </file>
+      <file>
+        <name>$PROJ_DIR$\src\timer_drv.c</name>
+      </file>
     </group>
     <group>
       <name>USB_STUFF</name>
