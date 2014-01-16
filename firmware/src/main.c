@@ -25,6 +25,8 @@ __IO uint8_t g_hw_type = DEV_WHB04;
 __IO uint8_t day = 0;
 int16_t encoder_val = 0;
 uint8_t rotary_pos = 0;
+uint8_t switch_old_val = 0;
+
 int g_render_lcd = 0;
 
 struct whb04_out_data output_report = { 0 };
@@ -136,7 +138,7 @@ void whb04_out( struct whb04_out_data *out )
   /* update XOR key */
   day = out->day;
   
-  sprintf( tmp, "P:%.2Xh %.4d*", rotary_pos, mul2val[out->step_mul&0x0F] );
+  sprintf( tmp, "P:%.2X %.4d*", rotary_pos, mul2val[out->step_mul&0x0F] );
   lcd_driver.draw_text( tmp, 0, 0 );
   sprintf( tmp, "S:  %.5d  %.5d", out->sspeed, out->sspeed_ovr );
   lcd_driver.draw_text( tmp, 0, 1 );
@@ -192,6 +194,7 @@ int main(void)
   lcd_driver.draw_text( (g_hw_type == DEV_WHB03) ? "XHC HB03":"XHC HB04", 20, 2 );
 
   
+  switch_old_val = io_driver.pos_is_wc();
   io_poll_tmr = 500;
   for (;;)
   {
@@ -219,6 +222,12 @@ int main(void)
         g_render_lcd = 1;
         state_changed |= 2;
         rotary_pos = tmp;
+      }
+      
+      if( switch_old_val != io_driver.pos_is_wc() )
+      {
+        switch_old_val = io_driver.pos_is_wc();
+        g_render_lcd = 1;
       }
       
       encoder_val = io_driver.encoder_read();
