@@ -1,4 +1,4 @@
-OpenXHC Project
+OpenXHC Project ![logo][6]
 ---------------
 
 Open source implementation of XHC HB03 HB04 CNC MPG devices.
@@ -20,10 +20,10 @@ Open source implementation of XHC HB03 HB04 CNC MPG devices.
 
 **Links:**
 
- - [Alpha version YouTube video][5]
- - Mach 3 plugin ( ver. 3.5.5.2 ): [Download][1]
- - NCStudio plugin ( English, ver. 1.2 ): [Download][2] 
- - [XHC Company Web][3]
+ - [Alpha version YouTube video][2]
+ - Mach 3 plugin ( ver. 3.5.5.2 ): [Download][3]
+ - NCStudio plugin ( English, ver. 1.2 ): [Download][4] 
+ - [XHC Company Web][5]
 
 **TODO:**
 
@@ -32,13 +32,14 @@ Open source implementation of XHC HB03 HB04 CNC MPG devices.
 
 **Donate**
 
-Want to support my project? PayPal donatation: [LINK][4]
+Want to support my project? PayPal donatation: [LINK][6]
 
 ----------
 
 
-  [1]: http://www.cdxhctech.com/html/Driver/view_119.html
-  [2]: http://www.cdxhctech.com/html/edownloads/view_94.html
-  [3]: www.cdxhctech.com
-  [4]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=fxdteam%40gmail%2ecom&lc=RU&item_name=Support%20for%20OpenXHC%20project&item_number=fxdteam%40gmail%2ecom&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
-  [5]: http://youtu.be/CrtD9Fmc2Ks
+  [1]: https://bitbucket.org/moonglow/openxhc/raw/25a791f57264fd141af4ea4078b66fbb008cd263/open_xhc_logo_128x56.png
+  [2]: http://youtu.be/CrtD9Fmc2Ks
+  [3]: http://www.cdxhctech.com/html/Driver/view_119.html
+  [4]: http://www.cdxhctech.com/html/edownloads/view_94.html
+  [5]: www.cdxhctech.com
+  [6]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=fxdteam%40gmail%2ecom&lc=RU&item_name=Support%20for%20OpenXHC%20project&item_number=fxdteam%40gmail%2ecom&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
