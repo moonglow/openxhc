@@ -9,7 +9,7 @@ Open source implementation of XHC HB03 HB04 CNC MPG devices.
 
 **Features:**
 
- - STM32F10x controller with hardware USB FS
+ - STM32F10x controller with hardware USB 2.0 FS
  - Rotary encoder ( quadrature output )
  - Rotary switch ( 7 position )
  - Switch button
