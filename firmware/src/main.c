@@ -138,12 +138,10 @@ void whb04_out( struct whb04_out_data *out )
   /* update XOR key */
   day = out->day;
   
-  sprintf( tmp, "P:%.2X %.4d*", rotary_pos, mul2val[out->step_mul&0x0F] );
+  sprintf( tmp, "P:%.2X     %.4d*", rotary_pos, mul2val[out->step_mul&0x0F] );
   lcd_driver.draw_text( tmp, 0, 0 );
-  sprintf( tmp, "S:  %.5d  %.5d", out->sspeed, out->sspeed_ovr );
+  sprintf( tmp, "S: %.5d F: %.5d", out->sspeed, out->feedrate );
   lcd_driver.draw_text( tmp, 0, 1 );
-  sprintf( tmp, "F:  %.5d  %.5d", out->feedrate, out->feedrate_ovr );
-  lcd_driver.draw_text( tmp, 0, 2 );
   
   if( (g_hw_type == DEV_WHB04) && (rotary_pos == 0x18 ) )
     axis_name[0] = 'A';
@@ -159,7 +157,7 @@ void whb04_out( struct whb04_out_data *out )
   {
     tmp[0] = pref_name[i];
     tmp[1] = axis_name[i%3];
-    sprintf( s, "%.5d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
+    sprintf( s, "%.6d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
     tmp[4] = (out->pos[i].p_frac&0x8000u)?'-':'+';
     lcd_driver.draw_text( tmp, 0, i+3-n );
   }
@@ -191,7 +189,7 @@ int main(void)
   lcd_driver.init();
   lcd_driver.clear_screen();
   
-  lcd_driver.draw_text( (g_hw_type == DEV_WHB03) ? "XHC HB03":"XHC HB04", 20, 2 );
+  lcd_driver.draw_text( (g_hw_type == DEV_WHB03) ? "XHC HB03":"XHC HB04", 20, 1 );
 
   
   switch_old_val = io_driver.pos_is_wc();

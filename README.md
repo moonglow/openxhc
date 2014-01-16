@@ -34,7 +34,7 @@ Open source implementation of XHC HB03 HB04 CNC MPG devices.
 
 **Donate**
 
-Want to support my project? PayPal donatation: [LINK][6]
+Want to support my project? PayPal donatation: [LINK][6] (if will not work nevermind)
 
 ----------
 
