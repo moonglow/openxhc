@@ -14,7 +14,7 @@
 #include "usb_pwr.h"
 
 #include "xhc_dev.h"
-#include "nokia_lcd.h"
+#include "lcd_driver.h"
 #include "kbd_driver.h"
 #include "io_input.h"
 #include "timer_drv.h"
@@ -31,10 +31,8 @@ int g_render_lcd = 0;
 
 struct whb04_out_data output_report = { 0 };
 struct whb0x_in_data in_report = { .id = 0x04 };
-void whb04_out( struct whb04_out_data *out );
 
-/* convert step multiplier */
-static uint16_t mul2val[] = { 0, 1, 5, 10, 20, 30, 40, 50, 100, 500, 1000, 0, 0, 0, 0, 0 };
+
 
 /* EP1 packet goes out OK */
 void EP1_IN_Callback(void)
@@ -44,11 +42,6 @@ void EP1_IN_Callback(void)
 
 void xhc_send( void )
 {
-  
-  
-  memset( &in_report, 0x00, sizeof ( struct whb0x_in_data ) );
-  in_report.id = 0x04;
-  
   kbd_driver.read( &in_report.btn_1, &in_report.btn_2 );
   
   in_report.xor_day = day ^ in_report.btn_1;
@@ -122,49 +115,10 @@ void xhc_recv( uint8_t *data )
   {
     output_report = *((struct whb04_out_data*)tmp_buff);
   }
-  
+  /* update XOR key */
+  day = output_report.day;
   g_render_lcd = 1;
 }
-
-static char axis_name[] = "XYZ";
-static const char pref_name[] = "WWWMMM";
-
-void whb04_out( struct whb04_out_data *out )
-{
-  char tmp[18];
-  char *s = &tmp[5];
-  char i, n;
- 
-  /* update XOR key */
-  day = out->day;
-  
-  sprintf( tmp, "P:%.2X     %.4d*", rotary_pos, mul2val[out->step_mul&0x0F] );
-  lcd_driver.draw_text( tmp, 0, 0 );
-  sprintf( tmp, "S: %.5d F: %.5d", out->sspeed, out->feedrate );
-  lcd_driver.draw_text( tmp, 0, 1 );
-  
-  if( (g_hw_type == DEV_WHB04) && (rotary_pos == 0x18 ) )
-    axis_name[0] = 'A';
-  else
-    axis_name[0] = 'X';
-
-  
-  tmp[2] = ':';
-  tmp[3] = ' ';
-  
-  n = io_driver.pos_is_wc()? 0: 3;
-  for( i = n; i < (3+n); i++ )
-  {
-    tmp[0] = pref_name[i];
-    tmp[1] = axis_name[i%3];
-    sprintf( s, "%.6d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
-    tmp[4] = (out->pos[i].p_frac&0x8000u)?'-':'+';
-    lcd_driver.draw_text( tmp, 0, i+3-n );
-  }
-  
-}
-
-
 
 int main(void)
 {
@@ -206,52 +160,53 @@ int main(void)
     {
       --g_render_lcd;
       lcd_driver.render_screen( &output_report, rotary_pos, io_driver.pos_is_wc() );
-      whb04_out( &output_report );
     }
     
     /* update input events state */
-    if( !io_poll_tmr )
+    if( io_poll_tmr )
+      continue;
+
+    uint8_t tmp;
+      
+    tmp = io_driver.rotary_read();
+    if( rotary_pos != tmp )
     {
-      uint8_t tmp;
-      
-      tmp = io_driver.rotary_read();
-      if( rotary_pos != tmp )
-      {
-        g_render_lcd = 1;
-        state_changed |= 2;
-        rotary_pos = tmp;
-      }
-      
-      if( switch_old_val != io_driver.pos_is_wc() )
-      {
-        switch_old_val = io_driver.pos_is_wc();
-        g_render_lcd = 1;
-      }
-      
-      encoder_val = io_driver.encoder_read();
-      if( rotary_pos && (encoder_val || (encoder_val != encoder )) )
-      {
-          if( encoder_val > 0 )
-            encoder_val = 1;
-          else if( encoder_val < 0 )
-            encoder_val = -1;
-          state_changed |= 1;
-          encoder = encoder_val;
-      }
-      
-      uint8_t k1, k2;
-      do
-      {
-        k1 = c1, k2 = c2;
-        tmp = kbd_driver.read( &c1, &c2 );
-      }while( (k1!=c1) || (k2 != c2 ) );
-      if( nkeys != tmp )
-      {
-        state_changed |=4;
-        nkeys = tmp;
-      }
-      io_poll_tmr = 50;
+      g_render_lcd = 1;
+      state_changed |= 2;
+      rotary_pos = tmp;
     }
+      
+    if( switch_old_val != io_driver.pos_is_wc() )
+    {
+      switch_old_val = io_driver.pos_is_wc();
+      g_render_lcd = 1;
+    }
+      
+    encoder_val = io_driver.encoder_read();
+    if( rotary_pos && (encoder_val || (encoder_val != encoder )) )
+    {
+      if( encoder_val > 0 )
+        encoder_val = 1;
+      else if( encoder_val < 0 )
+        encoder_val = -1;
+      state_changed |= 1;
+      encoder = encoder_val;
+    }
+      
+    uint8_t k1, k2;
+    do
+    {
+      k1 = c1, k2 = c2;
+      tmp = kbd_driver.read( &c1, &c2 );
+    }
+    while( (k1!=c1) || (k2 != c2 ) );
+    if( nkeys != tmp )
+    {
+      state_changed |=4;
+      nkeys = tmp;
+    }
+    
+    io_poll_tmr = 30;
 
     if( state_changed )
     {   

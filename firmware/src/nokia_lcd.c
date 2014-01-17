@@ -5,12 +5,14 @@
  *                             WTFPL LICENSE v2                      *
 \*********************************************************************/
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "stm32f10x.h"
 #include "spi_master.h"
 #include "io_macro.h"
+#include "xhc_dev.h"
 
-#include "nokia_lcd.h"
+#include "lcd_driver.h"
 /* nokia 5100 driver */
 
 /* 
@@ -141,6 +143,7 @@ static void lcd_write_string( char *s, int x, int y )
   UNSELECT();
 } 
 
+
 static void lcd_clear_line( char y )
 {
   char n;
@@ -153,7 +156,7 @@ static void lcd_clear_line( char y )
   }
   UNSELECT();
 } 
-
+#if 0
 static void lcd_write_pixels( uint8_t data )
 {
    SELECT();
@@ -168,12 +171,77 @@ static void lcd_xy( char x,  char y)
   lcd_write_byte(0x80 | x, 0);// row
   UNSELECT();
 } 
+#endif
 
-
+static char axis_name[] = "XYZ";
+static const char pref_name[] = "WWWMMM";
+/* convert step multiplier */
+static uint16_t mul2val[] = { 0, 1, 5, 10, 20, 30, 40, 50, 100, 500, 1000, 0, 0, 0, 0, 0 };
+static char mode2char( uint8_t mode )
+{
+  switch( mode )
+  {
+    case 0x11:
+      return 'X';
+    case 0x12:
+      return 'Y';
+    case 0x13:
+      return 'Z';
+    case 0x14:
+      return 'S';
+    case 0x15:
+      return 'F';
+    case 0x18:
+      if(g_hw_type == DEV_WHB04)
+        return 'A';
+      else
+        return 'T';
+  }
+  return 'N';
+}
 /* display data to specific display */
 static void nokia_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
 {
+  char tmp[18];
+  char i, n;
+  struct whb04_out_data *out = (struct whb04_out_data *)p;
+  char *s = &tmp[7];
+ 
+  sprintf( tmp, "P:%c           %.4d*", mode2char( mode ), mul2val[out->step_mul&0x0F] );
+  lcd_driver.draw_text( tmp, 0, 0 );
+  sprintf( tmp, "S: %.5d  F: %.5d", out->sspeed, out->feedrate );
+  lcd_driver.draw_text( tmp, 0, 1 );
   
+  if( (mode == 0x14) || (mode == 0x15) )
+  {
+    sprintf( tmp, "O: %.5d  O: %.5d", out->sspeed_ovr, out->feedrate_ovr );
+    lcd_driver.draw_text( tmp, 0, 2 );
+  }
+  else
+  {
+    lcd_clear_line( 2 );
+  }
+  
+  if( (g_hw_type == DEV_WHB04) && (mode == 0x18 ) )
+    axis_name[0] = 'A';
+  else
+    axis_name[0] = 'X';
+
+  
+  tmp[2] = ':';
+  tmp[3] = ' ';
+  tmp[4] = ' ';
+  tmp[5] = ' ';
+  
+  n = ( mode_ex == 1 )? 0: 3;
+  for( i = n; i < (3+n); i++ )
+  {
+    tmp[0] = pref_name[i];
+    tmp[1] = axis_name[i%3];
+    sprintf( s, "%.5d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
+    tmp[6] = (out->pos[i].p_frac&0x8000u)?'-':'+';
+    lcd_driver.draw_text( tmp, 0, i+3-n );
+  }
 }
 
 
