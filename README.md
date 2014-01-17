@@ -3,7 +3,7 @@
 OpenXHC Project
 ---------------
 
-Open source implementation of XHC HB03 HB04 CNC MPG devices.
+Open-source implementation of XHC HB03 HB04 CNC MPG devices.
 
 
 ----------
@@ -31,7 +31,8 @@ Open source implementation of XHC HB03 HB04 CNC MPG devices.
 
  - Add more LCD: HD44780, EastRising COG displays
  - Code clean-up
-
+ - Open-source hardware PCB board
+ 
 **Donate**
 
 Want to support my project? PayPal donatation: [LINK][6] (if will not work nevermind)
