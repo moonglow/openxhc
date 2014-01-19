@@ -252,7 +252,7 @@ static void lcd_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
   
   sprintf( tmp, "ROT POSITION:%c", mode2char( mode ) );
   lcd_driver.draw_text( tmp, 0, 1 );
-  sprintf( tmp, "MPG:%.4d*", mul2val[out->step_mul&0x0F] );
+  sprintf( tmp, "MPG:%.4d", mul2val[out->step_mul&0x0F] );
   lcd_driver.draw_text( tmp, 88, 1 ); 
   
   sprintf( tmp, "S: %.5d  F: %.5d", out->sspeed, out->feedrate );

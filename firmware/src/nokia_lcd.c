@@ -16,6 +16,7 @@
 /* nokia 5100 driver */
 
 /* 
+  DRIVER: PCD8544
   HW connection: 
   XX  - LED ( NOT USED )
   PA5 - SCLK
