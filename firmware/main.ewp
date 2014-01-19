@@ -1931,6 +1931,9 @@
     <group>
       <name>DRIVERS</name>
       <file>
+        <name>$PROJ_DIR$\src\erc12864_4.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\src\font5x8.c</name>
       </file>
       <file>
@@ -1941,6 +1944,10 @@
       </file>
       <file>
         <name>$PROJ_DIR$\src\nokia_lcd.c</name>
+        <excluded>
+          <configuration>Debug</configuration>
+          <configuration>Release</configuration>
+        </excluded>
       </file>
       <file>
         <name>$PROJ_DIR$\src\spi_master.c</name>

@@ -15,4 +15,5 @@ struct t_timer_driver
 
 extern const struct t_timer_driver timer_driver;
 extern __IO uint32_t io_poll_tmr;
+extern __IO uint32_t tmr_v_delay;
 

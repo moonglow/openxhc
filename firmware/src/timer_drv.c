@@ -17,12 +17,15 @@
 #define TIMER_ISR       TIM4_IRQHandler
 
 __IO uint32_t io_poll_tmr = 0;
+__IO uint32_t tmr_v_delay = 0;
 
 void TIMER_ISR( void )
 {
   TIMER_DEV->SR = (uint16_t)(~TIM_IT_Update);
   if( io_poll_tmr )
     --io_poll_tmr;
+  if( tmr_v_delay )
+    --tmr_v_delay;
 }
 
 /* setup timer resolution to 1ms */
