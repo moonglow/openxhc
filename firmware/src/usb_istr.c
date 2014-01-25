@@ -76,7 +76,9 @@ void (*pEpInt_OUT[7])(void) =
 *******************************************************************************/
 void USB_Istr(void)
 {
+#if (IMR_MSK & ISTR_ESOF)
     uint32_t i=0;
+#endif
  __IO uint32_t EP[8];
   
   wIstr = _GetISTR();
