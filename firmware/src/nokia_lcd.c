@@ -11,8 +11,9 @@
 #include "spi_master.h"
 #include "io_macro.h"
 #include "xhc_dev.h"
-
 #include "lcd_driver.h"
+
+#include "font5x8.c"
 /* nokia 5100 driver */
 
 /* 
@@ -27,8 +28,6 @@
   GND
   VDD
 */
-
-extern const uint8_t font5x8[][5];
 
 #define LCD_RESET       A, 2, SPEED_50MHz
 #define LCD_CS          A, 4, SPEED_50MHz
@@ -122,7 +121,7 @@ static void lcd_clear(void)
 
 static void lcd_write_char( char c)
 {
-  char line, n;
+  char line, n = 5;
   c-= 32;
   for (line=0; line<n; line++)
   lcd_write_byte(font5x8[c][line], 1);

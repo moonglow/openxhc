@@ -12,8 +12,9 @@
 #include "io_macro.h"
 #include "xhc_dev.h"
 #include "timer_drv.h"
-
 #include "lcd_driver.h"
+
+#include "font5x8.c"
 /* 
   EastRising 128x64 COG LCD ( ERC12864-4 ) 
   DRIVER: ST7565R
@@ -52,8 +53,6 @@ uint8_t Contrast_level = 0x16;
 #define Start_column	0x00
 #define Start_page      0x00
 #define	StartLine_set	0x00
-
-extern const uint8_t font5x8[][5];
 
 #define LCD_RESET       A, 2, SPEED_50MHz
 #define LCD_CS          A, 4, SPEED_50MHz
@@ -128,7 +127,7 @@ static void Set_Contrast_Control_Register( uint8_t mod )
 
 static void Display_Char( char c)
 {
-  char line, n;
+  char line, n = 5;
   c-= 32;
   for (line=0; line<n; line++)
   {

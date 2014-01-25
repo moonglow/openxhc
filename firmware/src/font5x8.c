@@ -1,4 +1,3 @@
-#include <stdint.h>
 
 /* limited for more code space saving */
 const uint8_t font5x8[][5] =
