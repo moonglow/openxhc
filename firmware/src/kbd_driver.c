@@ -165,18 +165,6 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
 static void driver_init( void )
 {
     /* do for each pin, to allow user change any pin he want */
-#if 0
-    PORT_ENABLE_CLOCK( COL1 );
-    PORT_ENABLE_CLOCK( COL2 );
-    PORT_ENABLE_CLOCK( COL3 );
-    PORT_ENABLE_CLOCK( COL4 );
-    PORT_ENABLE_CLOCK( COL5 );
-    
-    PORT_ENABLE_CLOCK( ROW1 );
-    PORT_ENABLE_CLOCK( ROW2 );
-    PORT_ENABLE_CLOCK( ROW3 );
-    PORT_ENABLE_CLOCK( ROW4 );
-#else
     PORT_ENABLE_CLOCK_START()
       PORT_ENABLE_CLOCK_ENTRY( COL1 )
       PORT_ENABLE_CLOCK_ENTRY( COL2 )
@@ -189,7 +177,7 @@ static void driver_init( void )
       PORT_ENABLE_CLOCK_ENTRY( ROW3 )
       PORT_ENABLE_CLOCK_ENTRY( ROW4 )
     PORT_ENABLE_CLOCK_END()
-#endif
+
     PIN_INPUT_PU( COL1 );
     PIN_INPUT_PU( COL2 );
     PIN_INPUT_PU( COL3 );
