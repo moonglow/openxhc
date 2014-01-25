@@ -124,10 +124,6 @@ static void lcd_write_char( char c)
 {
   char line, n;
   c-= 32;
-  if( c == 0 )
-    n = 3;
-  else
-    n = 5;
   for (line=0; line<n; line++)
   lcd_write_byte(font5x8[c][line], 1);
 }
