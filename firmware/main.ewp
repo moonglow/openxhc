@@ -1937,7 +1937,7 @@
         </excluded>
       </file>
       <file>
-        <name>$PROJ_DIR$\src\font5x8.c</name>
+        <name>$PROJ_DIR$\src\hd44780.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\src\io_input.c</name>
@@ -1948,11 +1948,15 @@
       <file>
         <name>$PROJ_DIR$\src\nokia_lcd.c</name>
         <excluded>
+          <configuration>Debug</configuration>
           <configuration>Release</configuration>
         </excluded>
       </file>
       <file>
         <name>$PROJ_DIR$\src\spi_master.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\src\string_utils.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\src\timer_drv.c</name>
