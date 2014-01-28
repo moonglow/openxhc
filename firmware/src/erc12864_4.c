@@ -12,6 +12,7 @@
 #include "io_macro.h"
 #include "xhc_dev.h"
 #include "timer_drv.h"
+#include "string_utils.h"
 #include "lcd_driver.h"
 
 #include "font5x8.c"
@@ -241,21 +242,39 @@ static void lcd_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
   static char only_once = 1;
   char i;
   struct whb04_out_data *out = (struct whb04_out_data *)p;
-  char *s = &tmp[4];
   
   lcd_driver.draw_text( "STATUS: TODO", 0, 0 );
   
-  sprintf( tmp, "ROT POSITION:%c", mode2char( mode ) );
+  sprintf( tmp, "POS: %c  ", mode2char( mode ) );
   lcd_driver.draw_text( tmp, 0, 1 );
-  sprintf( tmp, "MPG:%.4d", mul2val[out->step_mul&0x0F] );
-  lcd_driver.draw_text( tmp, 88, 1 ); 
+  sprintf( tmp, "MPG: " );
+  string2uint( mul2val[out->step_mul&0x0F], 4, &tmp[5] );
+  lcd_driver.draw_text( tmp, 75, 1 ); 
   
-  sprintf( tmp, "S: %.5d  F: %.5d", out->sspeed, out->feedrate );
+  tmp[0] = 'S';
+  tmp[1] = ':';
+  tmp[2] = ' ';
+  string2uint( out->sspeed, 5, &tmp[3] );
+  tmp[8] = ' ';
+  tmp[9] = ' ';
+  tmp[10] = 'F';
+  tmp[11] = ':';
+  tmp[12] = ' ';
+  string2uint( out->feedrate, 5, &tmp[13] );
   lcd_driver.draw_text( tmp, 0, 2 );
   
   if( (mode == 0x14) || (mode == 0x15) )
   {
-    sprintf( tmp, "O: %.5d  O: %.5d", out->sspeed_ovr, out->feedrate_ovr );
+    tmp[0] = 'O';
+    tmp[1] = ':';
+    tmp[2] = ' ';
+    string2uint( out->sspeed_ovr, 5, &tmp[3] );
+    tmp[8] = ' ';
+    tmp[9] = ' ';
+    tmp[10] = 'O';
+    tmp[11] = ':';
+    tmp[12] = ' ';
+    string2uint( out->feedrate_ovr, 5, &tmp[13] );
     lcd_driver.draw_text( tmp, 0, 3 );
   }
   else
@@ -270,21 +289,19 @@ static void lcd_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
   
   if( only_once )
   {
-    lcd_driver.draw_text( "WC", 40, 4 );
-    lcd_driver.draw_text( "MC", 98, 4 );
+    lcd_driver.draw_text( "WC", 35, 4 );
+    lcd_driver.draw_text( "MC", 95, 4 );
     only_once = 0;
   }
-  tmp[1] = ':';
-  tmp[2] = ' ';
+
   for( i = 0; i < 3; i++ )
   {
     tmp[0] = axis_name[i];
-    sprintf( s, "%.5d.%.4d  %.5d.%.4d", 
-                        out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u),
-                        out->pos[i+3].p_int, out->pos[i+3].p_frac&(~0x8000u)
-                        );
-    tmp[3] = (out->pos[i].p_frac&0x8000u)?'-':'+';
-    tmp[15] = (out->pos[i+3].p_frac&0x8000u)?'-':'+';
+    tmp[1] = ' ';
+    xhc2string( out->pos[i].p_int, out->pos[i].p_frac, 5, 4, &tmp[2] );
+    tmp[13] = ' ';
+    xhc2string( out->pos[i+3].p_int, out->pos[i+3].p_frac, 5, 4, &tmp[14] );
+    //tmp[20] = 0;
     lcd_driver.draw_text( tmp, 0, i+5 );
   }
 }

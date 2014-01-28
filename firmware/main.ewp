@@ -1932,12 +1932,12 @@
       <name>DRIVERS</name>
       <file>
         <name>$PROJ_DIR$\src\erc12864_4.c</name>
-        <excluded>
-          <configuration>Debug</configuration>
-        </excluded>
       </file>
       <file>
         <name>$PROJ_DIR$\src\hd44780.c</name>
+        <excluded>
+          <configuration>Debug</configuration>
+        </excluded>
       </file>
       <file>
         <name>$PROJ_DIR$\src\io_input.c</name>
