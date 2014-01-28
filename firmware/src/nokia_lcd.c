@@ -11,6 +11,7 @@
 #include "spi_master.h"
 #include "io_macro.h"
 #include "xhc_dev.h"
+#include "string_utils.h"
 #include "lcd_driver.h"
 
 #include "font5x8.c"
@@ -198,19 +199,41 @@ static char mode2char( uint8_t mode )
 /* display data to specific display */
 static void nokia_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
 {
-  char tmp[18];
+  char tmp[22];
   char i, n;
   struct whb04_out_data *out = (struct whb04_out_data *)p;
-  char *s = &tmp[7];
  
-  sprintf( tmp, "P:%c           %.4d*", mode2char( mode ), mul2val[out->step_mul&0x0F] );
+  tmp[0] = 'P';
+  tmp[1] = ':';
+  tmp[2] = mode2char( mode );
+  tmp[3] = ' ';
+  tmp[4] = 'M';
+  tmp[5] = ':';
+  string2uint( mul2val[out->step_mul&0x0F], 4, &tmp[6] );
+  tmp[10] = '*';
+  tmp[11] = 0;
   lcd_driver.draw_text( tmp, 0, 0 );
-  sprintf( tmp, "S: %.5d  F: %.5d", out->sspeed, out->feedrate );
+  
+  tmp[0] = 'S';
+  tmp[1] = ':';
+  string2uint( out->sspeed, 5, &tmp[2] );
+  tmp[7] = ' ';
+  tmp[8] = ' ';
+  tmp[9] = 'F';
+  tmp[10] = ':';
+  string2uint( out->feedrate, 5, &tmp[11] );
   lcd_driver.draw_text( tmp, 0, 1 );
   
   if( (mode == 0x14) || (mode == 0x15) )
   {
-    sprintf( tmp, "O: %.5d  O: %.5d", out->sspeed_ovr, out->feedrate_ovr );
+    tmp[0] = '0';
+    tmp[1] = ':';
+    string2uint( out->sspeed_ovr, 5, &tmp[2] );
+    tmp[7] = ' ';
+    tmp[8] = ' ';
+    tmp[9] = '0';
+    tmp[10] = ':';
+    string2uint( out->feedrate_ovr, 5, &tmp[11] );
     lcd_driver.draw_text( tmp, 0, 2 );
   }
   else
@@ -227,15 +250,13 @@ static void nokia_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
   tmp[2] = ':';
   tmp[3] = ' ';
   tmp[4] = ' ';
-  tmp[5] = ' ';
   
   n = ( mode_ex == 1 )? 0: 3;
   for( i = n; i < (3+n); i++ )
   {
     tmp[0] = pref_name[i];
     tmp[1] = axis_name[i%3];
-    sprintf( s, "%.5d.%.4d", out->pos[i].p_int, out->pos[i].p_frac&(~0x8000u) );
-    tmp[6] = (out->pos[i].p_frac&0x8000u)?'-':'+';
+    xhc2string( out->pos[i].p_int, out->pos[i].p_frac, 5, 4, &tmp[5] );
     lcd_driver.draw_text( tmp, 0, i+3-n );
   }
 }
