@@ -17,6 +17,7 @@ Open-source implementation of XHC HB03 HB04 CNC MPG devices.
  - Switch button
  - NOKIA 5110 LCD [PCD8544]
  - EastRising ERC12864-4 COG LCD [ST7565R]
+ - 20x4 LCD [HD44780]
  - Matrix keyboard ( up to 5x4 )
  - Emulate L(W)HB04 and L(W)HB03 MPG
  - Supports official plugins for Mach 3 and NCStudio
@@ -31,7 +32,7 @@ Open-source implementation of XHC HB03 HB04 CNC MPG devices.
 
 **TODO:**
 
- - Add more LCD: HD44780, etc
+ - Add more LCD
  - Code clean-up
  - Wireless version
  - Open-source hardware PCB board
