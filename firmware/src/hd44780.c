@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "stm32f10x.h"
 #include "io_macro.h"
 #include "xhc_dev.h"
@@ -72,7 +73,7 @@ static void hw_timer_init( void )
 static void delay_us( uint16_t us )
 {
     /* long wire compensation */
-    TIMER_DEV->ARR = (us*16);
+    TIMER_DEV->ARR = (us*4);
     TIMER_DEV->CR1 |= TIM_CR1_CEN;
     while( TIMER_DEV->CR1 & TIM_CR1_CEN );
 }
@@ -184,11 +185,6 @@ static void hd44780_hw_init( void )
   /* clear screen */
   lcd_write_cmd( 0x01 );
   delay_us( 2000 );
-  
-  __IO char tmp[32];
-  xhc2string( 0, 1, 4, 4, (char*)tmp );
-  lcd_driver.draw_text( (char*)tmp, 0, 0 );
-  for(;; );
 }
 
 static void hd44780_clear(void)
@@ -209,9 +205,85 @@ static void hd44780_write_string( char *s, int x, int y )
   }
 }
 
+
+static char axis_name[] = "XYZ";
+/* convert step multiplier */
+static uint16_t mul2val[] = { 0, 1, 5, 10, 20, 30, 40, 50, 100, 500, 1000, 0, 0, 0, 0, 0 };
+static char mode2char( uint8_t mode )
+{
+  switch( mode )
+  {
+    case 0x11:
+      return 'X';
+    case 0x12:
+      return 'Y';
+    case 0x13:
+      return 'Z';
+    case 0x14:
+      return 'S';
+    case 0x15:
+      return 'F';
+    case 0x18:
+      if(g_hw_type == DEV_WHB04)
+        return 'A';
+      else
+        return 'T';
+  }
+  return 'N';
+}
+
 static void hd44780_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
 {
+  char tmp[24];
+  char i;
+  struct whb04_out_data *out = (struct whb04_out_data *)p;
+  
+  tmp[0] = mode2char( mode );
+  tmp[1] = ' ';
+  tmp[2] = 'M';
+  string2uint( mul2val[out->step_mul&0x0F], 4, &tmp[3] );
+  tmp[7] = ' ';
+  tmp[8] = ' ';
+  tmp[9] = 'S';
+  string2uint( out->sspeed, 4, &tmp[10] );
+  tmp[14] = ' ';
+  tmp[15] = 'F';
+  string2uint( out->feedrate, 4, &tmp[16] );
+
+  lcd_driver.draw_text( tmp, 0, 0 );
+  
+  if( (g_hw_type == DEV_WHB04) && (mode == 0x18 ) )
+    axis_name[0] = 'A';
+  else
+    axis_name[0] = 'X';
+  
+  if( (mode == 0x14) || (mode == 0x15) )
+  {
+    strcpy( tmp, "SPEED       FEEDRATE" );
+    lcd_driver.draw_text( tmp, 0, 1 );
+    memset( tmp, ' ', sizeof( tmp ) );
     
+    string2uint( out->sspeed, 5,  &tmp[0] );
+    tmp[5] = ' ';
+    string2uint( out->feedrate, 5,  &tmp[15] );
+    lcd_driver.draw_text( tmp, 0, 2 );
+    
+    string2uint( out->sspeed_ovr, 5,  &tmp[0] );
+    tmp[5] = ' ';
+    string2uint( out->feedrate_ovr, 5,  &tmp[15] );
+    lcd_driver.draw_text( tmp, 0, 3 );
+    return;
+  }
+
+  for( i = 0; i < 3; i++ )
+  {
+    tmp[0] = axis_name[i];
+    xhc2string( out->pos[i].p_int, out->pos[i].p_frac, 4, 3, &tmp[1] );
+    tmp[10] = ' ';
+    xhc2string( out->pos[i+3].p_int, out->pos[i+3].p_frac, 4, 3, &tmp[11] );
+    tmp[20] = 0;
+    lcd_driver.draw_text( tmp, 0, i+1 );
+  }
 }
 
 const struct t_lcd_driver lcd_driver = 

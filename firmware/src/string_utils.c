@@ -13,6 +13,53 @@ static void strreverse( char *b, char *e )
         }
 }
 
+void string2uint( int32_t value, char padd, char *o )
+{
+    char *s = o;
+    char c = 0;
+    do
+    {
+      *o++ = (value%10)+'0';
+      value/=10;
+      ++c;
+    }
+    while( value );
+    while( c < padd )
+    {
+      *o++ = ' ';
+      ++c;
+    }
+    *o = 0;
+    strreverse( s, o-1 );
+}
+
+void string2int( int32_t value, char padd, char *o )
+{
+    char *s = o;
+    char c = 0;
+    char sign = ' ';
+    if( value < 0 )
+    {
+        sign = '-';
+        value = -value;
+    }
+    do
+    {
+      *o++ = (value%10)+'0';
+      value/=10;
+      ++c;
+    }
+    while( value );
+    while( c < padd )
+    {
+      *o++ = ' ';
+      ++c;
+    }
+    *o++ = sign;
+    *o = 0;
+    strreverse( s, o-1 );
+}
+
 void xhc2string( uint16_t iint, uint16_t ifrac, char ipadd, char fpadd, char *o )
 {
     char *s = o;
