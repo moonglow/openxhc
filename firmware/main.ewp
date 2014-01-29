@@ -1517,7 +1517,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>2</version>
-          <state>2</state>
+          <state>3</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -1525,7 +1525,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>main.bin</state>
+          <state>main.sim</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -1932,6 +1932,9 @@
       <name>DRIVERS</name>
       <file>
         <name>$PROJ_DIR$\src\erc12864_4.c</name>
+        <excluded>
+          <configuration>Release</configuration>
+        </excluded>
       </file>
       <file>
         <name>$PROJ_DIR$\src\hd44780.c</name>
