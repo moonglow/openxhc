@@ -27,23 +27,26 @@
 #define ROTARY_POS5     B, 11
 #define ROTARY_POS6     B, 1
 
-/* if you change it you need to rewrite init code too */
-#define ENCODER_A       A, 0
-#define ENCODER_B       A, 1
-
 /* BOOT1 by default */
 #define SELECT_HW       B, 2
 
 /* POSITION STATUS WC or MC */
 #define SELECT_POS      C, 13
 
-/* it is not so flexible, but no need to change i thing */
+/* if you change it you need to rewrite timer init code too */
+#define ENCODER_A       A, 0
+#define ENCODER_B       A, 1
+
+#define ENCODER_DEV       TIM2
+#define ENCODER_APB       RCC_APB1PeriphClockCmd
+#define ENCODER_CLOCK     RCC_APB1Periph_TIM2
+
 static void encoder_init( void )
 {
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_ICInitTypeDef  TIM_ICInitStructure;
    
-  RCC_APB1PeriphClockCmd( RCC_APB1Periph_TIM2, ENABLE );
+  ENCODER_APB( ENCODER_CLOCK, ENABLE );
   
   /* always on same port */
   PORT_ENABLE_CLOCK( ENCODER_A );
@@ -55,29 +58,29 @@ static void encoder_init( void )
   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up | TIM_CounterMode_Down;
   
-  TIM_TimeBaseInit( TIM2, &TIM_TimeBaseStructure);
+  TIM_TimeBaseInit( ENCODER_DEV, &TIM_TimeBaseStructure);
   
-  TIM_EncoderInterfaceConfig( TIM2, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising, TIM_ICPolarity_Rising );
+  TIM_EncoderInterfaceConfig( ENCODER_DEV, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising, TIM_ICPolarity_Rising );
   
-  TIM_ICStructInit(&TIM_ICInitStructure);
+  TIM_ICStructInit( &TIM_ICInitStructure );
   TIM_ICInitStructure.TIM_ICFilter = 0x04;
   
   TIM_ICInitStructure.TIM_Channel = TIM_Channel_1;
-  TIM_ICInit( TIM2, &TIM_ICInitStructure);
+  TIM_ICInit( ENCODER_DEV, &TIM_ICInitStructure);
   
   TIM_ICInitStructure.TIM_Channel = TIM_Channel_2;
-  TIM_ICInit( TIM2, &TIM_ICInitStructure);
+  TIM_ICInit( ENCODER_DEV, &TIM_ICInitStructure);
   
-  TIM2->CNT = 0;
+  ENCODER_DEV->CNT = 0;
   
-  TIM_Cmd( TIM2, ENABLE);
+  TIM_Cmd( ENCODER_DEV, ENABLE);
 }
 
 
 static int16_t encoder_read( void )
 {
-  int16_t tmp = TIM2->CNT;
-  TIM2->CNT = 0;
+  int16_t tmp = ENCODER_DEV->CNT;
+  ENCODER_DEV->CNT = 0;
   return tmp;
 }
 
