@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stm32f10x.h"
+#include <stdint.h>
 #include "io_macro.h"
 #include "xhc_dev.h"
 

@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "stm32f10x.h"
+#include <stdint.h>
 #include "spi_master.h"
 #include "io_macro.h"
 #include "xhc_dev.h"
@@ -19,7 +19,7 @@
 /* 
   EastRising 128x64 COG LCD ( ERC12864-4 ) 
   DRIVER: ST7565R
-  MODE: 4 wires SPI ( SPI_MODE_3 )
+  MODE: 4 wires SPI ( SPI_MODE_0 )
 */
 
 /* 

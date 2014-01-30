@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "stm32f10x.h"
+#include <stdint.h>
 #include "spi_master.h"
 #include "io_macro.h"
 #include "xhc_dev.h"
