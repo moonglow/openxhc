@@ -11,12 +11,16 @@
 
 static uint8_t spi_master_send_byte( SPI_TypeDef *dev, uint8_t data );
 
-void spi_init( int dev )
+/* frequency was nearest possible, but never be correct */
+void spi_init_ex( int dev, uint32_t hz )
 {
+    RCC_ClocksTypeDef RCC_Clock;
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
     SPI_TypeDef *SPI = 0;
+    uint32_t APB_Clock = 0;
     
+    RCC_GetClocksFreq( &RCC_Clock );
     if( 1 == dev )
     {
       RCC_APB2PeriphClockCmd( RCC_APB2Periph_SPI1, ENABLE );
@@ -33,6 +37,7 @@ void spi_init( int dev )
       GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_6;
       GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
       GPIO_Init( GPIOA, &GPIO_InitStructure );
+      APB_Clock = RCC_Clock.PCLK2_Frequency;
     }
     else if( 2 == dev )
     {
@@ -50,8 +55,19 @@ void spi_init( int dev )
       GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_14;
       GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
       GPIO_Init( GPIOB, &GPIO_InitStructure );
+      APB_Clock = RCC_Clock.PCLK1_Frequency;
     }
-    
+    else
+    {
+      return;
+    }
+    /* calculate prescaller */
+    int psc;
+    for( psc = 7; psc; --psc )
+    {
+      if( ( APB_Clock/(1<<(psc+1)) ) > hz )
+        break;
+    }
     SPI_I2S_DeInit( SPI );
     
     SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
@@ -60,14 +76,19 @@ void spi_init( int dev )
     SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
     SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
     SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-    /* good for long wire */
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
+    /* longer wire => low freq*/
+    SPI_InitStructure.SPI_BaudRatePrescaler = (psc*8);
   
     SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
     SPI_InitStructure.SPI_CRCPolynomial = 7;
     SPI_Init( SPI, &SPI_InitStructure );
   
-    SPI_Cmd( SPI, ENABLE);
+    SPI_Cmd( SPI, ENABLE);  
+}
+
+void spi_init( int dev )
+{
+  spi_init_ex( dev, 250000 );
 }
 
 uint8_t spi1_send_byte( uint8_t data )
