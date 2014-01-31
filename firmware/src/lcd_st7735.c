@@ -16,7 +16,7 @@
 #include "lcd_driver.h"
 
 #include "st7735_regs.h"
-
+#include "openxhc_logo.c"
 #include "font5x8.c"
 
 /*  
@@ -241,6 +241,28 @@ static void st7735_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
   st7735_write_cmd( ST7735_RAMWR );
 }
 
+
+uint16_t drawRGB24toRGB565(uint8_t r, uint8_t g, uint8_t b)
+{
+  return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
+}
+
+
+/* dirty and no needed, but looks nice */
+static void st7735_draw_logo( void )
+{
+  uint16_t logo_size = sizeof( logo_12856_4bit );
+  const uint8_t  *logo_ptr = logo_12856_4bit;
+  st7735_set_addr_window( 0, 0, 127, 55 );
+  while( logo_size-- )
+  {
+    uint8_t index = *logo_ptr;
+    st7735_write_data16( logo_12856_4bit_colors[index>>4] );
+    st7735_write_data16( logo_12856_4bit_colors[index&0x0F] );
+    ++logo_ptr;
+  }
+}
+
 static void st7735_hw_init( void )
 {
   spi_init_ex( 1, 3000000 );
@@ -257,10 +279,7 @@ static void st7735_hw_init( void )
   PIN_OUT_PP( LCD_RS );
   
   init_st7735r();
-  
-  lcd_driver.clear_screen( );
 }
-
 
 static void st7735_write_char( char c, uint8_t x, uint8_t y )
 {
@@ -403,6 +422,7 @@ static void st7735_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
   
   if( only_once )
   {
+    st7735_draw_logo();
     lcd_driver.draw_text( "WC", 35, 4 );
     lcd_driver.draw_text( "MC", 95, 4 );
     only_once = 0;
