@@ -301,7 +301,6 @@ static void lcd_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
     xhc2string( out->pos[i].p_int, out->pos[i].p_frac, 5, 4, &tmp[2] );
     tmp[13] = ' ';
     xhc2string( out->pos[i+3].p_int, out->pos[i+3].p_frac, 5, 4, &tmp[14] );
-    //tmp[20] = 0;
     lcd_driver.draw_text( tmp, 0, i+5 );
   }
 }

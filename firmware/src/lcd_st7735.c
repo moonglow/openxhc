@@ -283,12 +283,25 @@ static void st7735_write_char( char c, uint8_t x, uint8_t y )
 
 static void st7735_write_string( char *s, int x, int y )
 {
+  /* correct column address like other display do */
+  y=(y*8)+76;
   while (*s) 
   {
     st7735_write_char( *s, x, y );
     /* for 5 dots font w */
     x+=5;
     s++;
+  }
+}
+
+static void st7735_clear_line( int y )
+{
+  uint16_t n = 128*8;
+  y=(y*8)+76;
+  st7735_set_addr_window( 0, y, 127, y+7 );
+  while( n-- )
+  {
+    st7735_write_data16( 0 );
   }
 }
 
@@ -311,9 +324,99 @@ static void st7735_lcd_clear( void )
   PIN_HI( LCD_CS );
 }
 
+static char axis_name[] = "XYZ";
+/* convert step multiplier */
+static uint16_t mul2val[] = { 0, 1, 5, 10, 20, 30, 40, 50, 100, 500, 1000, 0, 0, 0, 0, 0 };
+static char mode2char( uint8_t mode )
+{
+  switch( mode )
+  {
+    case 0x11:
+      return 'X';
+    case 0x12:
+      return 'Y';
+    case 0x13:
+      return 'Z';
+    case 0x14:
+      return 'S';
+    case 0x15:
+      return 'F';
+    case 0x18:
+      if(g_hw_type == DEV_WHB04)
+        return 'A';
+      else
+        return 'T';
+  }
+  return 'N';
+}
+
 static void st7735_render_screen( void *p, uint8_t mode, uint8_t mode_ex )
 {
+  char tmp[32];
+  static char only_once = 1;
+  char i;
+  struct whb04_out_data *out = (struct whb04_out_data *)p;
   
+  lcd_driver.draw_text( "STATUS: TODO", 0, 0 );
+  
+  sprintf( tmp, "POS: %c  ", mode2char( mode ) );
+  lcd_driver.draw_text( tmp, 0, 1 );
+  sprintf( tmp, "MPG: " );
+  string2uint( mul2val[out->step_mul&0x0F], 4, &tmp[5] );
+  lcd_driver.draw_text( tmp, 75, 1 ); 
+  
+  tmp[0] = 'S';
+  tmp[1] = ':';
+  tmp[2] = ' ';
+  string2uint( out->sspeed, 5, &tmp[3] );
+  tmp[8] = ' ';
+  tmp[9] = ' ';
+  tmp[10] = 'F';
+  tmp[11] = ':';
+  tmp[12] = ' ';
+  string2uint( out->feedrate, 5, &tmp[13] );
+  lcd_driver.draw_text( tmp, 0, 2 );
+  
+  if( (mode == 0x14) || (mode == 0x15) )
+  {
+    tmp[0] = 'O';
+    tmp[1] = ':';
+    tmp[2] = ' ';
+    string2uint( out->sspeed_ovr, 5, &tmp[3] );
+    tmp[8] = ' ';
+    tmp[9] = ' ';
+    tmp[10] = 'O';
+    tmp[11] = ':';
+    tmp[12] = ' ';
+    string2uint( out->feedrate_ovr, 5, &tmp[13] );
+    lcd_driver.draw_text( tmp, 0, 3 );
+  }
+  else
+  {
+    st7735_clear_line( 3 );
+  }
+  
+  if( (g_hw_type == DEV_WHB04) && (mode == 0x18 ) )
+    axis_name[0] = 'A';
+  else
+    axis_name[0] = 'X';
+  
+  if( only_once )
+  {
+    lcd_driver.draw_text( "WC", 35, 4 );
+    lcd_driver.draw_text( "MC", 95, 4 );
+    only_once = 0;
+  }
+
+  for( i = 0; i < 3; i++ )
+  {
+    tmp[0] = axis_name[i];
+    tmp[1] = ' ';
+    xhc2string( out->pos[i].p_int, out->pos[i].p_frac, 5, 4, &tmp[2] );
+    tmp[13] = ' ';
+    xhc2string( out->pos[i+3].p_int, out->pos[i+3].p_frac, 5, 4, &tmp[14] );
+    lcd_driver.draw_text( tmp, 0, i+5 );
+  }
 }
 
 
