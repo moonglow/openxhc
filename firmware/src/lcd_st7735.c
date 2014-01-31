@@ -241,19 +241,9 @@ static void st7735_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
   st7735_write_cmd( ST7735_RAMWR );
 }
 
-void st7735_write_pixel( uint8_t x, uint8_t y, uint16_t color ) 
-{
-  if( (x >= LCD_W ) || (y >= LCD_H) ) 
-    return;
-
-  st7735_set_addr_window( x, y, x+1, y+1 );
-
-  st7735_write_data16( color );
-}
-
 static void st7735_hw_init( void )
 {
-  spi_init( 1 );
+  spi_init_ex( 1, 3000000 );
   
   PORT_ENABLE_CLOCK( LCD_RESET );
   PORT_ENABLE_CLOCK( LCD_CS );
@@ -280,18 +270,13 @@ static void st7735_write_char( char c, uint8_t x, uint8_t y )
   for (n=0; n<5; n++)
   {
     d = font5x8[c][n];
+    st7735_set_addr_window( x, y, x, y+7 );
+    ++x;
     i = 8;
     while( i-- )
     {
-      if( d & 0x80 )
-      {
-        st7735_write_pixel( x+n, y+i, font_color );
-      }
-      else
-      {
-        st7735_write_pixel( x+n, y+i, 0 );
-      }
-      d <<= 1;
+      st7735_write_data16( (d&0x01)?font_color:0 );
+      d >>= 1;
     }
   }
 }
