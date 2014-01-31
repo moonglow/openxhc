@@ -241,13 +241,6 @@ static void st7735_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y
   st7735_write_cmd( ST7735_RAMWR );
 }
 
-
-uint16_t drawRGB24toRGB565(uint8_t r, uint8_t g, uint8_t b)
-{
-  return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
-}
-
-
 /* dirty and no needed, but looks nice */
 static void st7735_draw_logo( void )
 {
