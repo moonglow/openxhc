@@ -108,7 +108,7 @@ static uint8_t select_hw_read( void )
 
 static uint8_t select_pos_read( void )
 {
-  return PIN_STAT( SELECT_POS );
+  return (PIN_STAT( SELECT_POS ) == 0 );
 }
 
 static void io_input_init(  void )
