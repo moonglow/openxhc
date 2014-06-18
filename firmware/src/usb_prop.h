@@ -26,6 +26,7 @@ uint8_t *HID_GetConfigDescriptor(uint16_t);
 uint8_t *HID_GetStringDescriptor(uint16_t);
 RESULT HID_SetProtocol(void);
 uint8_t *HID_GetProtocolValue(uint16_t Length);
+uint8_t *HID_GetIdleValue(uint16_t Length);
 RESULT HID_SetProtocol(void);
 uint8_t *HID_GetReportDescriptor(uint16_t Length);
 uint8_t *HID_GetHIDDescriptor(uint16_t Length);
