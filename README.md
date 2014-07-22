@@ -26,9 +26,9 @@ Open-source implementation of XHC HB03 HB04 CNC MPG devices.
 **Links:**
 
  - [Alpha version YouTube video][2]
- - Mach 3 plugin ( ver. 3.5.5.2 ): [Download][3]
+ - Mach 3 plugin ( ver. 3.5.6 ): [Download][3]
  - NCStudio plugin ( English, ver. 1.2 ): [Download][4] 
- - Linux CNC HAL ( ver. 0.5 ): [Download][7]
+ - Linux CNC HAL ( ver. 0.6 ): [Download][7]
  - [XHC Company Web][5]
 
 **TODO:**

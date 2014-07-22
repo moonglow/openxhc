@@ -104,7 +104,7 @@ void xhc_recv( uint8_t *data )
     
     for( i = 0; i < 6; i++ )
     {
-      uint16_t tmp = (p->pos[i].p_frac & 0x80)<<16;
+      uint16_t tmp = (p->pos[i].p_frac & 0x80)<<8;
       p->pos[i].p_frac &=~0x80;
       tmp |= p->pos[i].p_frac * 100l; 
       output_report.pos[i].p_int = p->pos[i].p_int;

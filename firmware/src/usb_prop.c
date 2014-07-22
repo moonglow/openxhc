@@ -8,6 +8,8 @@
 #include "xhc_dev.h"
 
 static uint32_t ProtocolValue = 0;
+static uint32_t IdleValue = 0;
+
 #define SET_REPORT_SIZE         8
 uint8_t Report_Buf[SET_REPORT_SIZE];  
 
@@ -183,6 +185,9 @@ RESULT HID_Data_Setup(uint8_t RequestNo)
       case GET_PROTOCOL:
         CopyRoutine = HID_GetProtocolValue;
       break;
+      case GET_IDLE:
+        CopyRoutine = HID_GetIdleValue;
+      break;
       case SET_REPORT:
         CopyRoutine = HID_SetReport_Feature;
       break;
@@ -200,16 +205,22 @@ RESULT HID_Data_Setup(uint8_t RequestNo)
 
 RESULT HID_NoData_Setup(uint8_t RequestNo)
 {
-  if ((Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
-      && (RequestNo == SET_PROTOCOL))
+  if( Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT ) )
   {
-    return HID_SetProtocol();
+    switch( RequestNo )
+    {
+      case SET_PROTOCOL:
+        return HID_SetProtocol();
+      break;
+      case SET_IDLE:
+        /* dummy save duration */
+        IdleValue = pInformation->USBwValue1;
+        return USB_SUCCESS;
+      break;
+    }
   }
 
-  else
-  {
-    return USB_UNSUPPORT;
-  }
+  return USB_UNSUPPORT;
 }
 
 uint8_t *HID_GetDeviceDescriptor(uint16_t Length)
@@ -285,5 +296,18 @@ uint8_t *HID_GetProtocolValue(uint16_t Length)
   else
   {
     return (uint8_t *)(&ProtocolValue);
+  }
+}
+
+uint8_t *HID_GetIdleValue(uint16_t Length)
+{
+  if (Length == 0)
+  {
+    pInformation->Ctrl_Info.Usb_wLength = 1;
+    return NULL;
+  }
+  else
+  {
+    return (uint8_t *)(&IdleValue);
   }
 }
