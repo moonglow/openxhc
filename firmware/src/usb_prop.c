@@ -211,12 +211,10 @@ RESULT HID_NoData_Setup(uint8_t RequestNo)
     {
       case SET_PROTOCOL:
         return HID_SetProtocol();
-      break;
       case SET_IDLE:
         /* dummy save duration */
         IdleValue = pInformation->USBwValue1;
-        return USB_SUCCESS;
-      break;
+				return USB_SUCCESS;
     }
   }
 

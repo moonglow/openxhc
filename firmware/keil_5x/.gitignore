@@ -5,6 +5,10 @@
 *.tra
 *.dep
 *.__i
+*._2i
+*.fed
+*.hex
+*.l2p
 *.crf
 *.d
 *.o
