@@ -1032,7 +1032,7 @@
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
-          <state>6.70.2.6303</state>
+          <state>7.20.1.7306</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -1961,16 +1961,18 @@
           <name>$PROJ_DIR$\src\hd44780.c</name>
           <excluded>
             <configuration>Debug</configuration>
-            <configuration>Release</configuration>
           </excluded>
         </file>
         <file>
           <name>$PROJ_DIR$\src\lcd_st7735.c</name>
+          <excluded>
+            <configuration>Debug</configuration>
+            <configuration>Release</configuration>
+          </excluded>
         </file>
         <file>
           <name>$PROJ_DIR$\src\nokia_lcd.c</name>
           <excluded>
-            <configuration>Debug</configuration>
             <configuration>Release</configuration>
           </excluded>
         </file>

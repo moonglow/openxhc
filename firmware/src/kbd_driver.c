@@ -130,7 +130,7 @@ static uint8_t kbd_read( uint8_t *c1, uint8_t *c2 )
     {
       reset_row( row );
       col=32;
-      while( --col ) asm("nop");
+      while( --col ) __asm("nop");
       col = 5;
       while( col-- )
       {

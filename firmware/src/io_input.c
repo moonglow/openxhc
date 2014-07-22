@@ -142,7 +142,7 @@ static void io_input_init(  void )
   encoder_init();
   while( t-- ) 
   {
-    asm("nop");
+    __asm("nop");
   }
 }
 
