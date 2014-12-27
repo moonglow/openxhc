@@ -1,0 +1,13 @@
+obj
+
+*.d
+
+*.o
+
+*.map
+
+*.bin
+
+*.hex
+
+*.elf
