@@ -22,7 +22,7 @@ Open-source implementation of XHC HB03 HB04 CNC MPG devices.
  - Matrix keyboard ( up to 5x4 )
  - Emulate L(W)HB04 and L(W)HB03 MPG
  - Supports official plugins for Mach 3 and NCStudio
- - Can build firmware with IAR ARM, CooCox 2.0, GCC
+ - Can build firmware with IAR ARM, Keil 5.x, CooCox 2.x, GCC
 
 **Links:**
 
