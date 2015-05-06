@@ -46,10 +46,10 @@ Want to support my project? PayPal donatation: [LINK][6] (if will not work never
 ----------
 
 
-  [1]: https://bitbucket.org/moonglow/openxhc/raw/25a791f57264fd141af4ea4078b66fbb008cd263/open_xhc_logo_128x56.png
+  [1]: https://bitbucket.org/moonglow/openxhc/raw/master/open_xhc_logo_128x56.png
   [2]: http://youtu.be/CrtD9Fmc2Ks
   [3]: http://www.cdxhctech.com/html/Driver/view_119.html
   [4]: http://www.cdxhctech.com/html/edownloads/view_94.html
-  [5]: www.cdxhctech.com
+  [5]: http://www.cdxhctech.com
   [6]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=fxdteam%40gmail%2ecom&lc=RU&item_name=Support%20for%20OpenXHC%20project&item_number=fxdteam%40gmail%2ecom&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
   [7]: http://wiki.linuxcnc.org/cgi-bin/wiki.pl?Using_A_XHC-HB04_Wireless_MPG_Pendant
